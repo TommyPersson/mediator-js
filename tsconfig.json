@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+
+    "moduleResolution": "node",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@tommypersson/mediator-core": ["./packages/mediator-core/src"],
+      "@tommypersson/mediator-react": ["./packages/mediator-react/src"]
+    }
+  },
+  "references": [
+    { "path": "./packages/mediator-core" },
+    { "path": "./packages/mediator-react" }
+  ]
+
+}

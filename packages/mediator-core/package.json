@@ -1,0 +1,22 @@
+{
+  "name": "@tommypersson/mediator-core",
+  "private": true,
+  "version": "0.2.0-SNAPSHOT-0",
+  "type": "module",
+  "main": "dist/index",
+  "types": "dist/index",
+  "files": [
+    "src",
+    "dist",
+    "package.json",
+    "yarn.lock"
+  ],
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "*"
+  },
+  "packageManager": "yarn@3.6.0",
+  "stableVersion": "0.2.0"
+}
