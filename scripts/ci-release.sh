@@ -7,6 +7,6 @@ set -x
 
 export CI="true"
 
-echo "GITHUB_TOKEN=$GITHUB_TOKEN"
+echo "NODE_AUTH_TOKEN=$NODE_AUTH_TOKEN"
 
 yarn workspaces foreach npm publish --access restricted

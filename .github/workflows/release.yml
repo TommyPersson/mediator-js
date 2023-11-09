@@ -20,3 +20,5 @@ jobs:
       - run: bash ./scripts/ci-build.sh ${{ github.ref_name }}
 
       - run: bash ./scripts/ci-release.sh
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN  }}
