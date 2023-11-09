@@ -18,7 +18,14 @@ jobs:
         with:
           node-version: "20.5"
 
-      - run: bash ./scripts/ci-build.sh
+      - name: Build & Test
+        run: bash ./scripts/ci-build.sh
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v3
+        if: success() || failure() # always run even if the previous step fails
+        with:
+          report_paths: 'packages/*/build/junit-*.xml'
 
       - name: Bump version and push tag
         uses: anothrNick/github-tag-action@1.64.0
