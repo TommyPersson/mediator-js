@@ -9,6 +9,7 @@ export CI="true"
 
 echo "NODE_AUTH_TOKEN=$NODE_AUTH_TOKEN"
 
-yarn workspaces foreach npm publish \
-  --access restricted \
-  --exclude root
+yarn workspaces foreach \
+  --exclude root \
+  npm publish \
+  --access restricted
