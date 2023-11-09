@@ -16,6 +16,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "20.5"
+          registry-url: https://npm.pkg.github.com
+          scope: "@tommypersson"
 
       - run: bash ./scripts/ci-build.sh ${{ github.ref_name }}
 
