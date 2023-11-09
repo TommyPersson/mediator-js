@@ -19,7 +19,7 @@ yarn set version 3.x
 yarn plugin import workspace-tools
 yarn plugin import version
 
-yarn install
-yarn workspaces foreach install
+yarn install --immutable
+yarn workspaces foreach install --immutable
 yarn workspaces foreach version "${VERSION}"
 yarn workspaces foreach run build
