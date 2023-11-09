@@ -13,6 +13,8 @@ export VERSION=${VERSION_STR#"v"}
 rm -rf packages/*/dist
 rm -rf packages/*/*.tsbuildinfo
 
+yarn set version 3.x
+
 yarn plugin import workspace-tools
 yarn plugin import version
 
