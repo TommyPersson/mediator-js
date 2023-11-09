@@ -9,9 +9,11 @@ export CI="true"
 
 echo "NODE_AUTH_TOKEN=$NODE_AUTH_TOKEN"
 
-cat .npmrc
+ls -l
+
 cat .yarnrc.yml
-cat .yarnrc
+
+ls -l ~
 
 yarn workspaces foreach npm publish \
   --access restricted
