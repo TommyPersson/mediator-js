@@ -2,8 +2,9 @@
   "name": "@tommypersson/mediator-core",
   "version": "0.0.0",
   "type": "module",
-  "main": "dist/index",
-  "types": "dist/index",
+  "main": "dist/esm/index",
+  "module": "dist/esm/index",
+  "types": "dist/esm/index",
   "files": [
     "src",
     "dist",
@@ -11,10 +12,16 @@
     "yarn.lock"
   ],
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
-    "typescript": "*"
+    "@types/jest": "*",
+    "jest": "*",
+    "ts-jest": "*",
+    "typescript": "*",
+    "vitest": "*"
   },
   "packageManager": "yarn@3.6.0",
   "repository": "https://github.com/TommyPersson/js"
