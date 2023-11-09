@@ -14,7 +14,7 @@ rm -rf packages/*/dist
 rm -rf packages/*/*.tsbuildinfo
 
 corepack enable yarn
-yarn set version 3.x
+yarn set version 3.6.0
 
 yarn plugin import workspace-tools
 yarn plugin import version
