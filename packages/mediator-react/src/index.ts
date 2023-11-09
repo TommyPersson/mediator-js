@@ -7,6 +7,7 @@ export function helloWorld2() {
 
 export class TestCommand extends AbstractCommand {
   async invoke(args: any): Promise<any> {
+    // no real change
     console.log(args)
     return {}
   }
