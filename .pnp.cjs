@@ -12,7 +12,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
     ],\
     "dependencyTreeRoots": [\
       {\
-        "name": "root-workspace-0b6124",\
+        "name": "root",\
         "reference": "workspace:."\
       },\
       {\
@@ -29,7 +29,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
     "fallbackExclusionList": [\
       ["@tommypersson/mediator-core", ["workspace:packages/mediator-core"]],\
       ["@tommypersson/mediator-react", ["workspace:packages/mediator-react"]],\
-      ["root-workspace-0b6124", ["workspace:."]]\
+      ["root", ["workspace:."]]\
     ],\
     "fallbackPool": [\
     ],\
@@ -63,11 +63,11 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "SOFT"\
         }]\
       ]],\
-      ["root-workspace-0b6124", [\
+      ["root", [\
         ["workspace:.", {\
           "packageLocation": "./",\
           "packageDependencies": [\
-            ["root-workspace-0b6124", "workspace:."]\
+            ["root", "workspace:."]\
           ],\
           "linkType": "SOFT"\
         }]\
