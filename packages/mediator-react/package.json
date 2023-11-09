@@ -1,7 +1,6 @@
 {
   "name": "@tommypersson/mediator-react",
-  "private": true,
-  "version": "0.2.0-SNAPSHOT-0",
+  "version": "0.0.0",
   "type": "module",
   "main": "dist/index",
   "types": "dist/index",
@@ -21,5 +20,5 @@
     "typescript": "*"
   },
   "packageManager": "yarn@3.6.0",
-  "stableVersion": "0.2.0"
+  "repository": "https://github.com/TommyPersson/js"
 }

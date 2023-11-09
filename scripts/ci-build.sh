@@ -7,7 +7,7 @@ set -x
 
 export CI="true"
 
-VERSION_STR=${1-v0}
+VERSION_STR=${1-"v0.0.0"}
 export VERSION=${VERSION_STR#"v"}
 
 rm -rf packages/*/dist
@@ -18,5 +18,5 @@ yarn plugin import version
 
 yarn install
 yarn workspaces foreach install
-yarn workspaces foreach version "0.2.0-SNAPSHOT-${VERSION}"
+yarn workspaces foreach version "${VERSION}"
 yarn workspaces foreach run build
