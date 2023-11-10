@@ -12,7 +12,8 @@
     "yarn.lock"
   ],
   "scripts": {
-    "build": "tsc",
+    "clean": "rm -rf dist",
+    "build": "yarn run clean && tsc",
     "test": "vitest run",
     "test:watch": "vitest"
   },

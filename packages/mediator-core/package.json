@@ -12,12 +12,17 @@
     "yarn.lock"
   ],
   "scripts": {
-    "build": "tsc",
+    "clean": "rm -rf dist",
+    "build": "yarn run clean && tsc",
     "test": "vitest run",
     "test:watch": "vitest"
   },
+  "dependencies": {
+    "uuid": "*"
+  },
   "devDependencies": {
     "@types/jest": "*",
+    "@types/uuid": "*",
     "jest": "*",
     "ts-jest": "*",
     "typescript": "*",
