@@ -1,5 +1,5 @@
 import { IRequestContext } from "./RequestContext"
-import { IRequest, ArgsOf, IQuery, ICommand, AbstractCommand, AbstractQuery } from "./Requests"
+import { ArgsOf, ICommand, IQuery, IRequest } from "./Requests"
 
 export interface IRequestHandler<
   TRequest extends IRequest<TArgs, TResult>,

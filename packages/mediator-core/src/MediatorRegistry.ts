@@ -1,8 +1,6 @@
-import {
-  CommandHandlerFactory, IRequestHandler,
-  QueryHandlerFactory,
-} from "./RequestHandlers"
-import { CommandClass, ICommand, IQuery, IRequest, QueryClass, RequestClass } from "./Requests"
+import { IMiddleware } from "./Middlewares"
+import { IRequestHandler } from "./RequestHandlers"
+import { AbstractRequest, RequestClass } from "./Requests"
 
 export interface IMediatorRegistry extends IRequestHandlerProvider {
   readonly middlewares: readonly any[]
@@ -10,30 +8,40 @@ export interface IMediatorRegistry extends IRequestHandlerProvider {
 
 export interface IRequestHandlerProvider {
   getHandlerFor<
-    TRequest extends IRequest<any, any>,
+    TRequest extends AbstractRequest<any, any>,
   >(requestClass: RequestClass<TRequest>): IRequestHandler<TRequest> | null
 }
 
-export class DefaultMediatorRegistry implements IMediatorRegistry {
+export interface IMiddlewareProvider {
+  readonly middlewares: readonly IMiddleware[]
+}
+
+export class DefaultMediatorRegistry implements IMediatorRegistry, IMiddlewareProvider {
 
   private readonly _handlerMappings: RequestHandlerMappings = new RequestHandlerMappings()
+  private _middlewares: IMiddleware[] = []
 
-  get middlewares(): readonly any[] {
-    return undefined!
+  get middlewares(): readonly IMiddleware[] {
+    return this._middlewares
   }
 
-  getHandlerFor<TRequest extends IRequest<any, any>>(requestClass: RequestClass<TRequest>): IRequestHandler<TRequest> | null {
+  getHandlerFor<TRequest extends AbstractRequest<any, any>>(requestClass: RequestClass<TRequest>): IRequestHandler<TRequest> | null {
     return (this._handlerMappings.get(requestClass))?.() ?? null
   }
 
-  register<
-    TRequest extends IRequest<any, any>
+  registerHandler<
+    TRequest extends AbstractRequest<any, any>
   >(requestClass: RequestClass<any, any>, handler: () => IRequestHandler<TRequest>): void {
     this._handlerMappings.add(requestClass, handler)
   }
 
+  registerMiddleware(...middleware: IMiddleware[]) {
+    this._middlewares.push(...middleware)
+  }
+
   reset() {
     this._handlerMappings.reset()
+    this._middlewares = []
   }
 }
 

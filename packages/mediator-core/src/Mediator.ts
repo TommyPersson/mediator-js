@@ -1,48 +1,50 @@
-import { GlobalMediatorRegistry, IRequestHandlerProvider } from "./MediatorRegistry"
-import { RequestContext } from "./RequestContext"
-import { AbstractQuery, AbstractRequest, IRequest, RequestClass } from "./Requests"
+import { GlobalMediatorRegistry, IMiddlewareProvider, IRequestHandlerProvider } from "./MediatorRegistry"
+import { IRequestContext, RequestContext } from "./RequestContext"
+import { AbstractRequest, RequestClass } from "./Requests"
 
 export interface IMediator {
   send<
-    TCommand extends IRequest<any, TResult>,
+    TRequest extends AbstractRequest<any, TResult>,
     TResult
-  >(request: TCommand): Promise<TResult>
+  >(request: TRequest): Promise<TResult>
 
   send<
-    TCommand extends IRequest<TArgs, TResult>,
+    TRequest extends AbstractRequest<TArgs, TResult>,
     TResult,
     TArgs
-  >(requestType: { new(args: TArgs): TCommand }, args: TArgs): Promise<TResult>
+  >(requestType: { new(args: TArgs): TRequest }, args: TArgs): Promise<TResult>
 }
 
 export class Mediator implements IMediator {
 
   constructor(
-    private readonly handlerProvider: IRequestHandlerProvider = GlobalMediatorRegistry
+    private readonly handlerProvider: IRequestHandlerProvider = GlobalMediatorRegistry,
+    private readonly middlewareProvider: IMiddlewareProvider = GlobalMediatorRegistry,
+    private readonly baseContext: IRequestContext = RequestContext.empty()
   ) {
   }
 
   send<
-    TCommand extends IRequest<any, TResult>,
-    TResult
-  >(request: TCommand): Promise<TResult>
+    TRequest extends AbstractRequest<any, TResult>,
+    TResult,
+  >(request: TRequest): Promise<TResult>
 
   send<
-    TCommand extends IRequest<TArgs, TResult>,
+    TRequest extends AbstractRequest<TArgs, TResult>,
     TResult,
-    TArgs
-  >(requestType: { new(args: TArgs): TCommand }, args: TArgs): Promise<TResult>
+    TArgs,
+  >(requestType: { new(args: TArgs): TRequest }, args: TArgs): Promise<TResult>
 
   async send<
-    TQuery extends AbstractQuery<TArgs, TResult>,
+    TRequest extends AbstractRequest<TArgs, TResult>,
     TResult,
-    TArgs
-  >(arg1: { new(args: TArgs): TQuery } | TQuery, arg2?: TArgs): Promise<TResult> {
+    TArgs,
+  >(arg1: { new(args: TArgs): TRequest } | TRequest, arg2?: TArgs): Promise<TResult> {
     if (arguments.length === 1) {
-      return this.handle1(arg1 as TQuery)
+      return this.handle1(arg1 as TRequest)
     }
     if (arguments.length === 2) {
-      return this.handle2(arg1 as { new(args: TArgs): TQuery }, arg2 as TArgs)
+      return this.handle2(arg1 as { new(args: TArgs): TRequest }, arg2 as TArgs)
     }
 
     throw new Error("Invalid arguments")
@@ -54,14 +56,24 @@ export class Mediator implements IMediator {
       throw new Error(`No handler found for '${(request as any).constructor}'`)
     }
 
-    const requestContext = RequestContext.empty()
-    const result = handler?.handle(request, requestContext)
+    const middleware = [...this.middlewareProvider.middlewares].sort((a, b) => b.priority - a.priority)
+
+    const handlerFn = (request: AbstractRequest<TArgs, TResult>, context: IRequestContext) => handler.handle(request, context)
+    const chain = middleware.reduce(
+      (acc, curr) => (request, context) => curr.handle(request, context, acc),
+      handlerFn,
+    )
+
+    const requestContext = this.baseContext.clone()
+
+    const result = chain(request, requestContext)
+
     return result
   }
 
   private async handle2<TRequest extends AbstractRequest<any, TResult>, TArgs, TResult>(
     requestType: RequestClass<TRequest>,
-    args: TArgs
+    args: TArgs,
   ): Promise<TResult> {
     const request = new requestType(args)
 

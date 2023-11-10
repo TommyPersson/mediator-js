@@ -54,14 +54,10 @@ export abstract class AbstractQuery<TArgs, TResult>
   private _nominal!: void
 }
 
-export type ArgsOf<TRequest extends IRequest<any, any> | ICommand<any, any> | IQuery<any, any>> = TRequest["args"]
+export type ArgsOf<TRequest extends (IRequest<any, any> | ICommand<any, any> | IQuery<any, any>)> = TRequest["args"]
 
 export type RequestClass<
   TRequest extends IRequest<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = TRequest["__resultType"]
 > = { new(args: TArgs): TRequest }
-
-export type CommandClass<TArgs, TResult> = { new(args: TArgs): ICommand<TArgs, TResult> }
-
-export type QueryClass<TArgs, TResult> = { new(args: TArgs): IQuery<TArgs, TResult> }
