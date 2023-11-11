@@ -22,5 +22,6 @@
     "uuid": "^9.0.1",
     "vitest": "^0.34.6"
   },
-  "packageManager": "yarn@3.6.0"
+  "packageManager": "yarn@3.6.0",
+  "repository": "https://github.com/TommyPersson/mediator-js"
 }
