@@ -1,0 +1,16 @@
+{
+  "versionGroups": [
+    {
+      "label": "Don't try to fix workspace dependencies",
+      "packages": [
+        "**"
+      ],
+      "dependencies": [
+        "@tommypersson/mediator-core",
+        "@tommypersson/mediator-react"
+      ],
+      "dependencyTypes": ["!local"],
+      "pinVersion": "workspace:*"
+    }
+  ]
+}

@@ -18,15 +18,15 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "uuid": "*"
+    "uuid": "9.0.1"
   },
   "devDependencies": {
-    "@types/jest": "*",
-    "@types/uuid": "*",
-    "jest": "*",
-    "ts-jest": "*",
-    "typescript": "*",
-    "vitest": "*"
+    "@types/jest": "29.5.8",
+    "@types/uuid": "9.0.7",
+    "jest": "29.7.0",
+    "ts-jest": "29.1.1",
+    "typescript": "5.2.2",
+    "vitest": "0.34.6"
   },
   "packageManager": "yarn@3.6.0",
   "repository": "https://github.com/TommyPersson/mediator-js"

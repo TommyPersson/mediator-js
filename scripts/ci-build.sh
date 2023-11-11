@@ -20,6 +20,7 @@ yarn plugin import workspace-tools
 yarn plugin import version
 yarn plugin import typescript
 
+yarn run syncpack:lint
 yarn install --immutable
 yarn workspaces foreach install --immutable
 yarn workspaces foreach version "${VERSION}"
