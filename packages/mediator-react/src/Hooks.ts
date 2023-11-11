@@ -1,85 +1,57 @@
 import { AbstractCommand, AbstractQuery, AbstractRequest, ArgsOf, RequestClass } from "@tommypersson/mediator-core"
 import { useCallback, useState, useEffect } from "react"
 import { useMediator } from "./MediatorContext"
+import { RequestState } from "./RequestState"
 import { useDeepEqualMemo } from "./utils"
 
-export enum RequestStates {
-  Pending = "pending",
-  InProgress = "in_progress",
-  Successful = "successful",
-  Failed = "failed",
-}
 
-export class RequestState {
-  private constructor(
-    private readonly _value: RequestStates,
-  ) {
-  }
-
-  static from(state: RequestStates): RequestState {
-    return new RequestState(state)
-  }
-
-  static pending(): RequestState {
-    return RequestState.from(RequestStates.Pending)
-  }
-
-  static inProgress(): RequestState {
-    return RequestState.from(RequestStates.InProgress)
-  }
-
-  static successful(): RequestState {
-    return RequestState.from(RequestStates.Successful)
-  }
-
-  static failed(): RequestState {
-    return RequestState.from(RequestStates.Failed)
-  }
-
-  get value(): RequestStates {
-    return this._value
-  }
-
-  isPending() {
-    return this._value === RequestStates.Pending
-  }
-
-  isInProgress() {
-    return this._value === RequestStates.InProgress
-  }
-
-  isSuccessful() {
-    return this._value === RequestStates.Successful
-  }
-
-  isFailed() {
-    return this._value === RequestStates.Failed
-  }
-}
-
-export interface RequestHookState<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+export interface RequestHook<
+  TRequest extends AbstractRequest<TArgs, TValue>,
   TArgs = ArgsOf<TRequest>,
-  TResult = TRequest["__resultType"]
+  TValue = TRequest["__resultType"]
 > {
   execute(args: TArgs): void
 
   state: RequestState
   error: Error | null
-  result: TResult | null
+  value: TValue | null
 }
 
-export interface PreparedRequestHookState<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+export type QueryHook<
+  TQuery extends AbstractQuery<TArgs, TValue>,
+  TArgs = ArgsOf<TQuery>,
+  TValue = TQuery["__resultType"]
+> = RequestHook<TQuery, TArgs, TValue>
+
+export type CommandHook<
+  TCommand extends AbstractCommand<TArgs, TValue>,
+  TArgs = ArgsOf<TCommand>,
+  TValue = TCommand["__resultType"]
+> = RequestHook<TCommand, TArgs, TValue>
+
+export interface PreparedRequestHook<
+  TRequest extends AbstractRequest<TArgs, TValue>,
   TArgs = ArgsOf<TRequest>,
-  TResult = TRequest["__resultType"]
+  TValue = TRequest["__resultType"]
 > {
   execute(): void
 
   state: RequestState
   error: Error | null
-  result: TResult | null
+  value: TValue | null
 }
+
+export type PreparedQueryHook<
+  TQuery extends AbstractQuery<TArgs, TValue>,
+  TArgs = ArgsOf<TQuery>,
+  TValue = TQuery["__resultType"]
+> = PreparedRequestHook<TQuery, TArgs, TValue>
+
+export type PreparedCommandHook<
+  TCommand extends AbstractCommand<TArgs, TValue>,
+  TArgs = ArgsOf<TCommand>,
+  TValue = TCommand["__resultType"]
+> = PreparedRequestHook<TCommand, TArgs, TValue>
 
 interface RequestOptions {
 }
@@ -89,34 +61,34 @@ interface PreparedRequestOptions {
 }
 
 export function useRequest<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends AbstractRequest<TArgs, TValue>,
   TArgs = ArgsOf<TRequest>,
-  TResult = TRequest["__resultType"],
+  TValue = TRequest["__resultType"],
 >(
   requestClass: RequestClass<TRequest>,
   options?: RequestOptions
-): RequestHookState<TRequest> {
+): RequestHook<TRequest> {
   const mediator = useMediator()
 
   const [stateBag, setStateBag] = useState({
     state: RequestState.pending(),
     error: <Error | null>null,
-    result: <TResult | null>null,
+    value: <TValue | null>null,
   })
 
   const execute = useCallback(async (args: TArgs) => {
     setStateBag({
       state: RequestState.inProgress(),
       error: null,
-      result: null,
+      value: null,
     })
 
     try {
-      const result: TResult = await mediator.send(requestClass, args)
+      const value: TValue = await mediator.send(requestClass, args)
       setStateBag({
         state: RequestState.successful(),
         error: null,
-        result: result,
+        value: value,
       })
     } catch (e) {
       let error: Error
@@ -129,7 +101,7 @@ export function useRequest<
       setStateBag({
         state: RequestState.failed(),
         error: error,
-        result: null,
+        value: null,
       })
     }
   }, [requestClass, mediator, setStateBag])
@@ -147,7 +119,7 @@ export function useQuery<
 >(
   queryClass: { new(args: TArgs): TQuery },
   options?: RequestOptions,
-): RequestHookState<TQuery> {
+): RequestHook<TQuery> {
   return useRequest(queryClass, options)
 }
 
@@ -158,7 +130,7 @@ export function useCommand<
 >(
   commandClass: { new(args: TArgs): TCommand },
   options?: PreparedRequestOptions,
-): RequestHookState<TCommand> {
+): RequestHook<TCommand> {
   return useRequest(commandClass, options)
 }
 
@@ -170,7 +142,7 @@ export function usePreparedRequest<
   requestClass: RequestClass<TRequest>,
   args: TArgs,
   options?: PreparedRequestOptions,
-): PreparedRequestHookState<TRequest> {
+): PreparedRequestHook<TRequest> {
   const original = useRequest(requestClass)
 
   const memoizedArgs = useDeepEqualMemo(() => args, [args])
@@ -199,7 +171,7 @@ export function usePreparedQuery<
   queryClass: { new(args: TArgs): TQuery },
   args: TArgs,
   options?: PreparedRequestOptions,
-): PreparedRequestHookState<TQuery> {
+): PreparedRequestHook<TQuery> {
   return usePreparedRequest(queryClass, args, options)
 }
 
@@ -211,6 +183,6 @@ export function usePreparedCommand<
   commandClass: { new(args: TArgs): TCommand },
   args: TArgs,
   options?: PreparedRequestOptions,
-): PreparedRequestHookState<TCommand> {
+): PreparedRequestHook<TCommand> {
   return usePreparedRequest(commandClass, args, options)
 }

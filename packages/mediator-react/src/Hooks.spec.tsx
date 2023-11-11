@@ -8,10 +8,11 @@ import {
 import { useCallback } from "react"
 import * as React from "react"
 import { beforeEach, describe, expect, it } from "vitest"
-import { RequestStates, usePreparedRequest, useRequest } from "./Hooks"
+import { usePreparedRequest, useRequest } from "./Hooks"
 import { MediatorContextProvider } from "./MediatorContext"
 import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { RequestStates } from "./RequestState"
 import { Deferred } from "./utils"
 
 let latch = new Deferred<void>()
@@ -45,7 +46,7 @@ describe("useRequest", async () => {
     return (
       <div>
         <span>state: {request.state.value}</span>
-        <span>result: {request.result ?? "null"}</span>
+        <span>result: {request.value ?? "null"}</span>
         <span>error: {request.error?.message ?? "null"}</span>
         <button onClick={onClick}>button</button>
       </div>
@@ -143,7 +144,7 @@ describe("usePreparedRequest", async () => {
       return (
         <div>
           <span>state: {request.state.value}</span>
-          <span>result: {request.result ?? "null"}</span>
+          <span>result: {request.value ?? "null"}</span>
           <span>error: {request.error?.message ?? "null"}</span>
           <button onClick={request.execute}>button</button>
         </div>
@@ -225,7 +226,7 @@ describe("usePreparedRequest", async () => {
       return (
         <div>
           <span>state: {request.state.value}</span>
-          <span>result: {request.result ?? "null"}</span>
+          <span>result: {request.value ?? "null"}</span>
           <span>error: {request.error?.message ?? "null"}</span>
         </div>
       )
