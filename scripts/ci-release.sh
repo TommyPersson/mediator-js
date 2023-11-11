@@ -11,5 +11,4 @@ echo "NODE_AUTH_TOKEN=$NODE_AUTH_TOKEN"
 
 yarn workspaces foreach \
   --exclude root \
-  npm publish \
-  --access restricted
+  npm publish
