@@ -23,5 +23,5 @@ yarn plugin import typescript
 yarn install --immutable
 yarn workspaces foreach install --immutable
 yarn workspaces foreach version "${VERSION}"
-yarn run test:all
 yarn run build:all
+yarn run test:all
