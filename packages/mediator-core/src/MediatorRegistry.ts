@@ -1,15 +1,14 @@
 import { IMiddleware } from "./Middlewares"
 import { IRequestHandler } from "./RequestHandlers"
-import { AbstractRequest, RequestClass } from "./Requests"
+import { AbstractRequest, ClassOf } from "./Requests"
 
-export interface IMediatorRegistry extends IRequestHandlerProvider {
-  readonly middlewares: readonly any[]
+export interface IMediatorRegistry extends IRequestHandlerProvider, IMiddlewareProvider {
 }
 
 export interface IRequestHandlerProvider {
   getHandlerFor<
     TRequest extends AbstractRequest<any, any>,
-  >(requestClass: RequestClass<TRequest>): IRequestHandler<TRequest> | null
+  >(requestClass: ClassOf<TRequest>): IRequestHandler<TRequest> | null
 }
 
 export interface IMiddlewareProvider {
@@ -25,17 +24,19 @@ export class DefaultMediatorRegistry implements IMediatorRegistry, IMiddlewarePr
     return this._middlewares
   }
 
-  getHandlerFor<TRequest extends AbstractRequest<any, any>>(requestClass: RequestClass<TRequest>): IRequestHandler<TRequest> | null {
+  getHandlerFor<TRequest extends AbstractRequest<any, any>>(
+    requestClass: ClassOf<TRequest>
+  ): IRequestHandler<TRequest> | null {
     return (this._handlerMappings.get(requestClass))?.() ?? null
   }
 
-  registerHandler<
+  addHandler<
     TRequest extends AbstractRequest<any, any>
-  >(requestClass: RequestClass<any, any>, handler: () => IRequestHandler<TRequest>): void {
+  >(requestClass: ClassOf<TRequest>, handler: () => IRequestHandler<TRequest>): void {
     this._handlerMappings.add(requestClass, handler)
   }
 
-  registerMiddleware(...middleware: IMiddleware[]) {
+  addMiddleware(...middleware: IMiddleware[]) {
     this._middlewares.push(...middleware)
   }
 
@@ -48,11 +49,11 @@ export class DefaultMediatorRegistry implements IMediatorRegistry, IMiddlewarePr
 class RequestHandlerMappings {
   private mappings: { [requestType: string]: () => IRequestHandler<any> } = {}
 
-  add(requestClass: RequestClass<any, any>, handlerFactory: () => IRequestHandler<any>): void {
+  add(requestClass: ClassOf<any>, handlerFactory: () => IRequestHandler<any>): void {
     this.mappings[requestClass.name] = handlerFactory
   }
 
-  get(requestClass: RequestClass<any, any>): (() => IRequestHandler<any>) | null {
+  get(requestClass: ClassOf<any>): (() => IRequestHandler<any>) | null {
     return this.mappings[requestClass.name] ?? null
   }
 
@@ -62,5 +63,5 @@ class RequestHandlerMappings {
 }
 
 
-export const GlobalMediatorRegistry = new DefaultMediatorRegistry()
+export const MediatorRegistry = new DefaultMediatorRegistry()
 

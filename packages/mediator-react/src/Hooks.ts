@@ -1,14 +1,16 @@
-import { AbstractCommand, AbstractQuery, AbstractRequest, ArgsOf, RequestClass } from "@tommypersson/mediator-core"
-import { useCallback, useState, useEffect } from "react"
+import { AbstractCommand, AbstractQuery, AbstractRequest, ArgsOf, ClassOf, ResultOf } from "@tommypersson/mediator-core"
+import { useCallback, useEffect, useState } from "react"
 import { useMediator } from "./MediatorContext"
 import { RequestState } from "./RequestState"
 import { useDeepEqualMemo } from "./utils"
 
-
+/**
+ * The result of {@link useRequest}.
+ */
 export interface RequestHook<
   TRequest extends AbstractRequest<TArgs, TValue>,
   TArgs = ArgsOf<TRequest>,
-  TValue = TRequest["__resultType"]
+  TValue = ResultOf<TRequest>
 > {
   execute(args: TArgs): void
 
@@ -17,22 +19,31 @@ export interface RequestHook<
   value: TValue | null
 }
 
+/**
+ * The result of {@link useQuery}.
+ */
 export type QueryHook<
   TQuery extends AbstractQuery<TArgs, TValue>,
   TArgs = ArgsOf<TQuery>,
-  TValue = TQuery["__resultType"]
+  TValue = ResultOf<TQuery>
 > = RequestHook<TQuery, TArgs, TValue>
 
+/**
+ * The result of {@link useCommand}.
+ */
 export type CommandHook<
   TCommand extends AbstractCommand<TArgs, TValue>,
   TArgs = ArgsOf<TCommand>,
-  TValue = TCommand["__resultType"]
+  TValue = ResultOf<TCommand>
 > = RequestHook<TCommand, TArgs, TValue>
 
+/**
+ * The result of {@link usePreparedRequest}.
+ */
 export interface PreparedRequestHook<
   TRequest extends AbstractRequest<TArgs, TValue>,
   TArgs = ArgsOf<TRequest>,
-  TValue = TRequest["__resultType"]
+  TValue = ResultOf<TRequest>
 > {
   execute(): void
 
@@ -41,31 +52,50 @@ export interface PreparedRequestHook<
   value: TValue | null
 }
 
+/**
+ * The result of {@link usePreparedQuery}.
+ */
 export type PreparedQueryHook<
   TQuery extends AbstractQuery<TArgs, TValue>,
   TArgs = ArgsOf<TQuery>,
-  TValue = TQuery["__resultType"]
+  TValue = ResultOf<TQuery>
 > = PreparedRequestHook<TQuery, TArgs, TValue>
 
+/**
+ * The result of {@link usePreparedCommand}.
+ */
 export type PreparedCommandHook<
   TCommand extends AbstractCommand<TArgs, TValue>,
   TArgs = ArgsOf<TCommand>,
-  TValue = TCommand["__resultType"]
+  TValue = ResultOf<TCommand>,
 > = PreparedRequestHook<TCommand, TArgs, TValue>
 
-interface RequestOptions {
+export interface RequestOptions {
 }
+
+export type QueryOptions = RequestOptions
+
+export type CommandOptions = RequestOptions
 
 interface PreparedRequestOptions {
   immediate?: boolean
 }
 
+export type PreparedQueryOptions = RequestOptions
+
+export type PreparedCommandOptions = RequestOptions
+
+/**
+ * This hook takes a {@link AbstractRequest} and returns a {@link RequestHook}.
+ *
+ * Needs to be used inside a {@link MediatorContext.Provider}.
+ */
 export function useRequest<
   TRequest extends AbstractRequest<TArgs, TValue>,
   TArgs = ArgsOf<TRequest>,
-  TValue = TRequest["__resultType"],
+  TValue = ResultOf<TRequest>,
 >(
-  requestClass: RequestClass<TRequest>,
+  requestClass: ClassOf<TRequest>,
   options?: RequestOptions
 ): RequestHook<TRequest> {
   const mediator = useMediator()
@@ -112,34 +142,48 @@ export function useRequest<
   }
 }
 
+/**
+ * Query alias for {@link useRequest}.
+ */
 export function useQuery<
   TQuery extends AbstractQuery<TArgs, TResult>,
   TArgs = ArgsOf<TQuery>,
-  TResult = TQuery["__resultType"],
+  TResult = ResultOf<TQuery>,
 >(
-  queryClass: { new(args: TArgs): TQuery },
-  options?: RequestOptions,
-): RequestHook<TQuery> {
+  queryClass: ClassOf<TQuery>,
+  options?: QueryOptions,
+): QueryHook<TQuery> {
   return useRequest(queryClass, options)
 }
 
+/**
+ * Query alias for {@link useRequest}.
+ */
 export function useCommand<
   TCommand extends AbstractCommand<TArgs, TResult>,
   TArgs = ArgsOf<TCommand>,
-  TResult = TCommand["__resultType"],
+  TResult = ResultOf<TCommand>,
 >(
-  commandClass: { new(args: TArgs): TCommand },
-  options?: PreparedRequestOptions,
-): RequestHook<TCommand> {
+  commandClass: ClassOf<TCommand>,
+  options?: CommandOptions,
+): CommandHook<TCommand> {
   return useRequest(commandClass, options)
 }
 
+/**
+ * Similar to {@link useRequest}, but instead of providing the request arguments in the
+ * {@link RequestHook.execute}-function, this version takes the given arguments and
+ * provides a no-argument execute function instead.
+ *
+ * If {@link PreparedRequestOptions.immediate} is `true`, then the request begins executing immediately and whenever
+ * `args` changes. Deep equality is used to determine if `args` has changed between renders.
+ */
 export function usePreparedRequest<
   TRequest extends AbstractRequest<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
-  TResult = TRequest["__resultType"],
+  TResult = ResultOf<TRequest>,
 >(
-  requestClass: RequestClass<TRequest>,
+  requestClass: ClassOf<TRequest>,
   args: TArgs,
   options?: PreparedRequestOptions,
 ): PreparedRequestHook<TRequest> {
@@ -163,26 +207,32 @@ export function usePreparedRequest<
   }
 }
 
+/**
+ * Query alias for {@link usePreparedRequest}.
+ */
 export function usePreparedQuery<
   TQuery extends AbstractQuery<TArgs, TResult>,
   TArgs = ArgsOf<TQuery>,
-  TResult = TQuery["__resultType"],
+  TResult = ResultOf<TQuery>,
 >(
-  queryClass: { new(args: TArgs): TQuery },
+  queryClass: ClassOf<TQuery>,
   args: TArgs,
-  options?: PreparedRequestOptions,
-): PreparedRequestHook<TQuery> {
+  options?: PreparedQueryOptions,
+): PreparedQueryHook<TQuery> {
   return usePreparedRequest(queryClass, args, options)
 }
 
+/**
+ * Command alias for {@link usePreparedRequest}.
+ */
 export function usePreparedCommand<
   TCommand extends AbstractCommand<TArgs, TResult>,
   TArgs = ArgsOf<TCommand>,
-  TResult = TCommand["__resultType"],
+  TResult = ResultOf<TCommand>,
 >(
-  commandClass: { new(args: TArgs): TCommand },
+  commandClass: ClassOf<TCommand>,
   args: TArgs,
-  options?: PreparedRequestOptions,
-): PreparedRequestHook<TCommand> {
+  options?: PreparedCommandOptions,
+): PreparedCommandHook<TCommand> {
   return usePreparedRequest(commandClass, args, options)
 }

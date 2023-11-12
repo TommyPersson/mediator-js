@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest"
 import {
   AbstractCommand,
-  AbstractCommandHandler,
   AbstractQuery,
-  AbstractQueryHandler,
+  ICommandHandler,
+  IQueryHandler,
   IRequestContext,
   RequestContext,
   RequestContextKey,
@@ -15,8 +15,8 @@ describe("QueryHandlers", async () => {
   class TestQuery extends AbstractQuery<{ greetee: string }, string> {
   }
 
-  class TestQueryHandler extends AbstractQueryHandler<TestQuery> {
-    async doHandle(query: TestQuery, context: IRequestContext): Promise<string> {
+  class TestQueryHandler implements IQueryHandler<TestQuery> {
+    async handle(query: TestQuery, context: IRequestContext): Promise<string> {
       return `Hello, ${query.args.greetee}!${context.get(SuffixKey) ?? ""}`
     }
   }
@@ -39,8 +39,8 @@ describe("CommandHandlers", async () => {
   class TestCommand extends AbstractCommand<{ greetee: string }, string> {
   }
 
-  class TestCommandHandler extends AbstractCommandHandler<TestCommand> {
-    async doHandle(command: TestCommand, context: IRequestContext): Promise<string> {
+  class TestCommandHandler implements ICommandHandler<TestCommand> {
+    async handle(command: TestCommand, context: IRequestContext): Promise<string> {
       return `Hello, ${command.args.greetee}!${context.get(SuffixKey) ?? ""}`
     }
   }

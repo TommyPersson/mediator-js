@@ -1,6 +1,6 @@
-import { GlobalMediatorRegistry, IMiddlewareProvider, IRequestHandlerProvider } from "./MediatorRegistry"
+import { MediatorRegistry, IMiddlewareProvider, IRequestHandlerProvider } from "./MediatorRegistry"
 import { IRequestContext, RequestContext } from "./RequestContext"
-import { AbstractRequest, RequestClass } from "./Requests"
+import { AbstractRequest, ClassOf } from "./Requests"
 
 export interface IMediator {
   send<
@@ -12,16 +12,25 @@ export interface IMediator {
     TRequest extends AbstractRequest<TArgs, TResult>,
     TResult,
     TArgs
-  >(requestType: { new(args: TArgs): TRequest }, args: TArgs): Promise<TResult>
+  >(requestType: ClassOf<TRequest>, args: TArgs): Promise<TResult>
+}
+
+export interface MediatorConfig {
+  readonly handlerProvider?: IRequestHandlerProvider
+  readonly middlewareProvider?: IMiddlewareProvider
+  readonly baseContext?: IRequestContext
 }
 
 export class Mediator implements IMediator {
 
-  constructor(
-    private readonly handlerProvider: IRequestHandlerProvider = GlobalMediatorRegistry,
-    private readonly middlewareProvider: IMiddlewareProvider = GlobalMediatorRegistry,
-    private readonly baseContext: IRequestContext = RequestContext.empty()
-  ) {
+  private readonly handlerProvider: IRequestHandlerProvider = MediatorRegistry
+  private readonly middlewareProvider: IMiddlewareProvider = MediatorRegistry
+  private readonly baseContext: IRequestContext = RequestContext.empty()
+
+  constructor(config?: MediatorConfig) {
+    this.handlerProvider = config?.handlerProvider ?? MediatorRegistry
+    this.middlewareProvider = config?.middlewareProvider ?? MediatorRegistry
+    this.baseContext = config?.baseContext ?? RequestContext.empty()
   }
 
   send<
@@ -33,13 +42,13 @@ export class Mediator implements IMediator {
     TRequest extends AbstractRequest<TArgs, TResult>,
     TResult,
     TArgs,
-  >(requestType: { new(args: TArgs): TRequest }, args: TArgs): Promise<TResult>
+  >(requestType: ClassOf<TRequest>, args: TArgs): Promise<TResult>
 
   async send<
     TRequest extends AbstractRequest<TArgs, TResult>,
     TResult,
     TArgs,
-  >(arg1: { new(args: TArgs): TRequest } | TRequest, arg2?: TArgs): Promise<TResult> {
+  >(arg1: ClassOf<TRequest> | TRequest, arg2?: TArgs): Promise<TResult> {
     if (arguments.length === 1) {
       return this.handle1(arg1 as TRequest)
     }
@@ -64,6 +73,8 @@ export class Mediator implements IMediator {
       handlerFn,
     )
 
+    // TODO cache the chain by request type?
+
     const requestContext = this.baseContext.clone()
 
     const result = chain(request, requestContext)
@@ -71,8 +82,8 @@ export class Mediator implements IMediator {
     return result
   }
 
-  private async handle2<TRequest extends AbstractRequest<any, TResult>, TArgs, TResult>(
-    requestType: RequestClass<TRequest>,
+  private async handle2<TRequest extends AbstractRequest<TArgs, TResult>, TArgs, TResult>(
+    requestType: ClassOf<TRequest>,
     args: TArgs,
   ): Promise<TResult> {
     const request = new requestType(args)

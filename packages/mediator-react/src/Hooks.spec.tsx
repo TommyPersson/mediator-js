@@ -1,7 +1,7 @@
 import {
   AbstractCommand,
-  AbstractCommandHandler,
-  GlobalMediatorRegistry,
+  ICommandHandler,
+  MediatorRegistry,
   IRequestContext,
   Mediator,
 } from "@tommypersson/mediator-core"
@@ -9,7 +9,7 @@ import { useCallback } from "react"
 import * as React from "react"
 import { beforeEach, describe, expect, it } from "vitest"
 import { usePreparedRequest, useRequest } from "./Hooks"
-import { MediatorContextProvider } from "./MediatorContext"
+import { MediatorContext } from "./MediatorContext"
 import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { RequestStates } from "./RequestState"
@@ -20,14 +20,14 @@ let latch = new Deferred<void>()
 class TestCommand extends AbstractCommand<{ input: number }, number> {
 }
 
-class TestCommandHandler extends AbstractCommandHandler<TestCommand> {
-  async doHandle(command: TestCommand, context: IRequestContext): Promise<number> {
+class TestCommandHandler implements ICommandHandler<TestCommand> {
+  async handle(command: TestCommand, context: IRequestContext): Promise<number> {
     await latch
     return command.args.input + 1
   }
 }
 
-GlobalMediatorRegistry.registerHandler(TestCommand, () => new TestCommandHandler())
+MediatorRegistry.addHandler(TestCommand, () => new TestCommandHandler())
 
 describe("useRequest", async () => {
 
@@ -55,9 +55,9 @@ describe("useRequest", async () => {
 
   function TestApp() {
     return (
-      <MediatorContextProvider value={new Mediator()}>
+      <MediatorContext.Provider value={new Mediator()}>
         <TestComponent/>
-      </MediatorContextProvider>
+      </MediatorContext.Provider>
     )
   }
 
@@ -153,9 +153,9 @@ describe("usePreparedRequest", async () => {
 
     function TestApp() {
       return (
-        <MediatorContextProvider value={new Mediator()}>
+        <MediatorContext.Provider value={new Mediator()}>
           <TestComponent/>
-        </MediatorContextProvider>
+        </MediatorContext.Provider>
       )
     }
 
@@ -234,9 +234,9 @@ describe("usePreparedRequest", async () => {
 
     function TestApp(props: { input: number }) {
       return (
-        <MediatorContextProvider value={new Mediator()}>
+        <MediatorContext.Provider value={new Mediator()}>
           <TestComponent input={props.input}/>
-        </MediatorContextProvider>
+        </MediatorContext.Provider>
       )
     }
 

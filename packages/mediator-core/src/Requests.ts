@@ -1,14 +1,8 @@
 import { v4 as uuid } from "uuid"
 
-export interface IRequest<TArgs, TResult> {
-  readonly args: TArgs
-  readonly instanceId: string
+const ResultType: unique symbol = Symbol("ResultType")
 
-  readonly __resultType: TResult
-}
-
-export abstract class AbstractRequest<TArgs, TResult>
-  implements IRequest<TArgs, TResult> {
+export abstract class AbstractRequest<TArgs, TResult> {
 
   constructor(
     readonly args: TArgs,
@@ -16,48 +10,21 @@ export abstract class AbstractRequest<TArgs, TResult>
   ) {
   }
 
-  readonly __resultType: TResult = undefined!
+  readonly [ResultType]: TResult = undefined!
 }
 
-export interface ICommand<TArgs, TResult>
-  extends IRequest<TArgs, TResult> {
-  readonly __resultType: TResult
+export abstract class AbstractCommand<TArgs, TResult> extends AbstractRequest<TArgs, TResult> {
 }
 
-export abstract class AbstractCommand<TArgs, TResult>
-  implements ICommand<TArgs, TResult> {
-  constructor(
-    readonly args: TArgs,
-    readonly instanceId: string = uuid(),
-  ) {
-  }
-
-  readonly __resultType: TResult = undefined!
-  private _nominal!: void
+export abstract class AbstractQuery<TArgs, TResult> extends AbstractRequest<TArgs, TResult> {
 }
 
-export interface IQuery<TArgs, TResult>
-  extends IRequest<TArgs, TResult> {
-  readonly __resultType: TResult
-}
+export type ArgsOf<TRequest extends (AbstractRequest<any, any> | AbstractCommand<any, any> | AbstractQuery<any, any>)> = TRequest["args"]
 
-export abstract class AbstractQuery<TArgs, TResult>
-  extends AbstractRequest<TArgs, TResult>
-  implements IQuery<TArgs, TResult> {
-  readonly __resultType: TResult = undefined!
-  constructor(
-    readonly args: TArgs,
-    readonly instanceId: string = uuid(),
-  ) {
-    super(args, instanceId)
-  }
-  private _nominal!: void
-}
+export type ResultOf<TRequest extends (AbstractRequest<any, any> | AbstractCommand<any, any> | AbstractQuery<any, any>)> = TRequest[typeof ResultType]
 
-export type ArgsOf<TRequest extends (IRequest<any, any> | ICommand<any, any> | IQuery<any, any>)> = TRequest["args"]
-
-export type RequestClass<
-  TRequest extends IRequest<TArgs, TResult>,
+export type ClassOf<
+  TRequest extends AbstractRequest<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
-  TResult = TRequest["__resultType"]
+  TResult = ResultOf<TRequest>
 > = { new(args: TArgs): TRequest }
