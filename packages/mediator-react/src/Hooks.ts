@@ -4,6 +4,12 @@ import { useMediator } from "./MediatorContext"
 import { RequestState } from "./RequestState"
 import { useDeepEqualMemo } from "./utils"
 
+export type CallbackOf<
+  TRequest extends AbstractRequest<TArgs, TResult>,
+  TArgs = ArgsOf<TRequest>,
+  TResult = ResultOf<TRequest>,
+> = (args: TArgs) => void
+
 /**
  * The result of {@link useRequest}.
  */
@@ -12,12 +18,14 @@ export interface RequestHook<
   TArgs = ArgsOf<TRequest>,
   TValue = ResultOf<TRequest>
 > {
-  execute(args: TArgs): void
+  execute: CallbackOf<TRequest>
 
   state: RequestState
   error: Error | null
   value: TValue | null
 }
+
+
 
 /**
  * The result of {@link useQuery}.
