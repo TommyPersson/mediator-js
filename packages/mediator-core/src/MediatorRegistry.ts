@@ -62,6 +62,15 @@ class RequestHandlerMappings {
   }
 }
 
+export const NullRequestHandlerProvider: IRequestHandlerProvider = {
+  getHandlerFor<TRequest extends AbstractRequest<any, any>>(requestClass: ClassOf<TRequest>): IRequestHandler<TRequest> | null {
+    return null
+  }
+}
+
+export const NullMiddlewareProvider: IMiddlewareProvider = {
+  middlewares: []
+}
 
 export const MediatorRegistry = new DefaultMediatorRegistry()
 

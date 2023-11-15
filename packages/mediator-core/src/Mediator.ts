@@ -1,4 +1,10 @@
-import { MediatorRegistry, IMiddlewareProvider, IRequestHandlerProvider } from "./MediatorRegistry"
+import {
+  IMiddlewareProvider,
+  IRequestHandlerProvider,
+  MediatorRegistry,
+  NullMiddlewareProvider,
+  NullRequestHandlerProvider
+} from "./MediatorRegistry"
 import { IRequestContext, RequestContext } from "./RequestContext"
 import { AbstractRequest, ClassOf } from "./Requests"
 
@@ -91,3 +97,8 @@ export class Mediator implements IMediator {
     return this.handle1(request)
   }
 }
+
+export const NullMediator = new Mediator({
+  handlerProvider: NullRequestHandlerProvider,
+  middlewareProvider: NullMiddlewareProvider,
+})

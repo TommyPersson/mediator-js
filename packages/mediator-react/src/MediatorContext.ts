@@ -1,7 +1,7 @@
-import { IMediator, Mediator } from "@tommypersson/mediator-core"
+import { IMediator, NullMediator } from "@tommypersson/mediator-core"
 import { createContext, useContext } from "react"
 
-export const MediatorContext = createContext<IMediator>(new Mediator())
+export const MediatorContext = createContext<IMediator>(NullMediator)
 
 export function useMediator(): IMediator {
   return useContext(MediatorContext)
