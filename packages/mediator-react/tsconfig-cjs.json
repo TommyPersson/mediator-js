@@ -1,8 +1,9 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "module": "ESNext",
-    "outDir": "dist/esm",
+    "module": "CommonJS",
+    "verbatimModuleSyntax": false,
+    "outDir": "dist/cjs",
     "rootDir": "src",
     "jsx": "react"
   },
@@ -14,7 +15,7 @@
   ],
   "references": [
     {
-      "path": "../mediator-core",
+      "path": "../mediator-core/tsconfig-cjs.json"
     }
   ]
 }

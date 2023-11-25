@@ -12,6 +12,8 @@ dist
 dist-ssr
 *.local
 build
+src/*.js*
+src/*.d.ts*
 
 # Editor directories and files
 .vscode/*
@@ -23,3 +25,4 @@ build
 *.njsproj
 *.sln
 *.sw?
+

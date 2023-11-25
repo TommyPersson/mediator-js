@@ -1,8 +1,7 @@
 {
   "name": "@tommypersson/mediator-react",
   "version": "0.0.0",
-  "type": "module",
-  "main": "dist/esm/index",
+  "main": "dist/cjs/index",
   "module": "dist/esm/index",
   "types": "dist/esm/index",
   "files": [
@@ -13,7 +12,9 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "yarn run clean && tsc",
+    "build": "yarn run clean && yarn run build:cjs && yarn run build:esm",
+    "build:cjs": "tsc --project tsconfig-cjs.json",
+    "build:esm": "tsc",
     "test": "vitest run",
     "test:watch": "vitest"
   },
