@@ -4,20 +4,21 @@ import {
   MediatorRegistry,
   NullMiddlewareProvider,
   NullRequestHandlerProvider
-} from "./MediatorRegistry"
-import { IRequestContext, RequestContext } from "./RequestContext"
-import { AbstractRequest, ClassOf } from "./Requests"
+} from "./MediatorRegistry.js"
+import { IRequestContext, RequestContext } from "./RequestContext.js"
+import { AbstractRequest, ArgsOf, ClassOf, ResultOf } from "./Requests.js"
 
 export interface IMediator {
   send<
-    TRequest extends AbstractRequest<any, TResult>,
-    TResult
+    TRequest extends AbstractRequest<TArgs, TResult>,
+    TArgs = ArgsOf<TRequest>,
+    TResult = ResultOf<TRequest>
   >(request: TRequest): Promise<TResult>
 
   send<
     TRequest extends AbstractRequest<TArgs, TResult>,
-    TResult,
-    TArgs
+    TArgs = ArgsOf<TRequest>,
+    TResult = ResultOf<TRequest>
   >(requestType: ClassOf<TRequest>, args: TArgs): Promise<TResult>
 }
 
@@ -40,14 +41,15 @@ export class Mediator implements IMediator {
   }
 
   send<
-    TRequest extends AbstractRequest<any, TResult>,
-    TResult,
+    TRequest extends AbstractRequest<TArgs, TResult>,
+    TArgs = ArgsOf<TRequest>,
+    TResult = ResultOf<TRequest>
   >(request: TRequest): Promise<TResult>
 
   send<
     TRequest extends AbstractRequest<TArgs, TResult>,
-    TResult,
-    TArgs,
+    TArgs = ArgsOf<TRequest>,
+    TResult = ResultOf<TRequest>
   >(requestType: ClassOf<TRequest>, args: TArgs): Promise<TResult>
 
   async send<

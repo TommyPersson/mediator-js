@@ -1,6 +1,6 @@
-import { IMiddleware } from "./Middlewares"
-import { IRequestHandler } from "./RequestHandlers"
-import { AbstractRequest, ClassOf } from "./Requests"
+import { IMiddleware } from "./Middlewares.js"
+import { IRequestHandler } from "./RequestHandlers.js"
+import { AbstractRequest, ClassOf } from "./Requests.js"
 
 export interface IMediatorRegistry extends IRequestHandlerProvider, IMiddlewareProvider {
 }

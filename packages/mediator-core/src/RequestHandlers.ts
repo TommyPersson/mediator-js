@@ -1,5 +1,5 @@
-import { IRequestContext } from "./RequestContext"
-import { AbstractCommand, AbstractQuery, AbstractRequest, ArgsOf, ResultOf } from "./Requests"
+import { IRequestContext } from "./RequestContext.js"
+import { AbstractCommand, AbstractQuery, AbstractRequest, ArgsOf, ResultOf } from "./Requests.js"
 
 export interface IRequestHandler<
   TRequest extends AbstractRequest<TArgs, TResult>,

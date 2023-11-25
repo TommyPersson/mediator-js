@@ -1,7 +1,7 @@
 
-export * from "./Requests"
-export * from "./RequestHandlers"
-export * from "./RequestContext"
-export * from "./MediatorRegistry"
-export * from "./Mediator"
-export * from "./Middlewares"
+export * from "./Requests.js"
+export * from "./RequestHandlers.js"
+export * from "./RequestContext.js"
+export * from "./MediatorRegistry.js"
+export * from "./Mediator.js"
+export * from "./Middlewares.js"

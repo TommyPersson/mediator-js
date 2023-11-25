@@ -1,5 +1,5 @@
-import { IRequestContext } from "./RequestContext"
-import { AbstractRequest, ResultOf } from "./Requests"
+import { IRequestContext } from "./RequestContext.js"
+import { AbstractRequest, ResultOf } from "./Requests.js"
 
 export interface IMiddleware {
   priority: number
