@@ -10,11 +10,12 @@
     "test:all": "yarn workspaces foreach run test",
     "build:all": "yarn workspaces foreach run build",
     "syncpack:lint": "syncpack lint",
-    "syncpack:fix": "syncpack fix-mismatches"
+    "syncpack:fix": "syncpack fix-mismatches",
+    "syncpack:update": "syncpack update"
   },
   "devDependencies": {
     "syncpack": "11.2.1",
-    "typescript": "5.2.2"
+    "typescript": "5.3.2"
   },
   "packageManager": "yarn@3.6.0",
   "repository": "https://github.com/TommyPersson/mediator-js"
