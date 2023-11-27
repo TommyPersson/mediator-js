@@ -192,7 +192,7 @@ export function usePreparedRequest<
   TResult = ResultOf<TRequest>,
 >(
   requestClass: ClassOf<TRequest>,
-  args: TArgs,
+  args: ArgsOf<TRequest>,
   options?: PreparedRequestOptions,
 ): PreparedRequestHook<TRequest> {
   const original = useRequest(requestClass)
@@ -224,7 +224,7 @@ export function usePreparedQuery<
   TResult = ResultOf<TQuery>,
 >(
   queryClass: ClassOf<TQuery>,
-  args: TArgs,
+  args: ArgsOf<TQuery>,
   options?: PreparedQueryOptions,
 ): PreparedQueryHook<TQuery> {
   return usePreparedRequest(queryClass, args, options)
@@ -239,7 +239,7 @@ export function usePreparedCommand<
   TResult = ResultOf<TCommand>,
 >(
   commandClass: ClassOf<TCommand>,
-  args: TArgs,
+  args: ArgsOf<TCommand>,
   options?: PreparedCommandOptions,
 ): PreparedCommandHook<TCommand> {
   return usePreparedRequest(commandClass, args, options)

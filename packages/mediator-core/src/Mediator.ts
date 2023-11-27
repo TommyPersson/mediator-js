@@ -50,13 +50,13 @@ export class Mediator implements IMediator {
     TRequest extends AbstractRequest<TArgs, TResult>,
     TArgs = ArgsOf<TRequest>,
     TResult = ResultOf<TRequest>
-  >(requestType: ClassOf<TRequest>, args: TArgs): Promise<TResult>
+  >(requestType: ClassOf<TRequest>, args: ArgsOf<TRequest>): Promise<TResult>
 
   async send<
     TRequest extends AbstractRequest<TArgs, TResult>,
     TArgs = ArgsOf<TRequest>,
     TResult = ResultOf<TRequest>
-  >(arg1: ClassOf<TRequest> | TRequest, arg2?: TArgs): Promise<TResult> {
+  >(arg1: ClassOf<TRequest> | TRequest, arg2?: ArgsOf<TRequest>): Promise<TResult> {
     if (!arg2) {
       return this.handle1(arg1 as TRequest)
     }
