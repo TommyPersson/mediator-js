@@ -19,7 +19,7 @@ export interface IMediator {
     TRequest extends AbstractRequest<TArgs, TResult>,
     TArgs = ArgsOf<TRequest>,
     TResult = ResultOf<TRequest>
-  >(requestType: ClassOf<TRequest>, args: TArgs): Promise<TResult>
+  >(requestType: ClassOf<TRequest>, args: ArgsOf<TRequest>): Promise<TResult>
 }
 
 export interface MediatorConfig {
