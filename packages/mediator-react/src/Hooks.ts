@@ -18,11 +18,13 @@ export interface RequestHook<
   TArgs = ArgsOf<TRequest>,
   TValue = ResultOf<TRequest>
 > {
-  execute: CallbackOf<TRequest>
+  readonly execute: CallbackOf<TRequest>
+  readonly reset: () => void
 
-  state: RequestState
-  error: Error | null
-  value: TValue | null
+  readonly state: RequestState
+  readonly args: TArgs | null
+  readonly error: Error | null
+  readonly value: TValue | null
 }
 
 
@@ -53,11 +55,13 @@ export interface PreparedRequestHook<
   TArgs = ArgsOf<TRequest>,
   TValue = ResultOf<TRequest>
 > {
-  execute(): void
+  readonly execute: () => void
+  readonly reset: () => void
 
-  state: RequestState
-  error: Error | null
-  value: TValue | null
+  readonly state: RequestState
+  readonly args: TArgs | null
+  readonly error: Error | null
+  readonly value: TValue | null
 }
 
 /**
@@ -110,6 +114,7 @@ export function useRequest<
 
   const [stateBag, setStateBag] = useState({
     state: RequestState.pending(),
+    args: <TArgs | null>null,
     error: <Error | null>null,
     value: <TValue | null>null,
   })
@@ -117,6 +122,7 @@ export function useRequest<
   const execute = useCallback(async (args: TArgs) => {
     setStateBag({
       state: RequestState.inProgress(),
+      args: args,
       error: null,
       value: null,
     })
@@ -125,6 +131,7 @@ export function useRequest<
       const value: TValue = await mediator.send(requestClass, args)
       setStateBag({
         state: RequestState.successful(),
+        args: args,
         error: null,
         value: value,
       })
@@ -138,14 +145,25 @@ export function useRequest<
 
       setStateBag({
         state: RequestState.failed(),
+        args: args,
         error: error,
         value: null,
       })
     }
   }, [requestClass, mediator, setStateBag])
 
+  const reset = useCallback(() => {
+    setStateBag({
+      state: RequestState.pending(),
+      args: <TArgs | null>null,
+      error: <Error | null>null,
+      value: <TValue | null>null,
+    })
+  }, [setStateBag])
+
   return {
     execute,
+    reset,
     ...stateBag
   }
 }
@@ -211,7 +229,8 @@ export function usePreparedRequest<
 
   return {
     ...original,
-    execute
+    execute,
+    args,
   }
 }
 

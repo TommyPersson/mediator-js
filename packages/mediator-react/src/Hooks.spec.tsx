@@ -41,14 +41,15 @@ describe("useRequest", async () => {
 
   function TestComponent() {
     const request = useRequest(TestCommand)
-    const onClick = useCallback(() => request.execute({ input: 1 }), [request.execute])
+    const handleClick = useCallback(() => request.execute({ input: 1 }), [request.execute])
 
     return (
       <div>
         <span>state: {request.state.value}</span>
         <span>result: {request.value ?? "null"}</span>
         <span>error: {request.error?.message ?? "null"}</span>
-        <button onClick={onClick}>button</button>
+        <button onClick={handleClick}>button</button>
+        <button onClick={request.reset}>reset</button>
       </div>
     )
   }
@@ -124,6 +125,28 @@ describe("useRequest", async () => {
       expect(screen.getByText("error: Error during mediator request: NotError")).toBeDefined()
     })
   })
+
+  it("Can be reset after execution", async () => {
+    render(<TestApp/>)
+
+    await userEvent.click(screen.getByText("button"))
+
+    latch.resolve()
+
+    await waitFor(async () => {
+      expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
+      expect(screen.getByText("result: 2")).toBeDefined()
+      expect(screen.getByText("error: null")).toBeDefined()
+    })
+
+    await userEvent.click(screen.getByText("reset"))
+
+    await waitFor(async () => {
+      expect(screen.getByText(`state: ${RequestStates.Pending}`)).toBeDefined()
+      expect(screen.getByText("result: null")).toBeDefined()
+      expect(screen.getByText("error: null")).toBeDefined()
+    })
+  })
 })
 
 describe("usePreparedRequest", async () => {
@@ -147,6 +170,7 @@ describe("usePreparedRequest", async () => {
           <span>result: {request.value ?? "null"}</span>
           <span>error: {request.error?.message ?? "null"}</span>
           <button onClick={request.execute}>button</button>
+          <button onClick={request.reset}>reset</button>
         </div>
       )
     }
@@ -208,6 +232,28 @@ describe("usePreparedRequest", async () => {
         expect(screen.getByText("error: mistake")).toBeDefined()
       })
     })
+
+    it("Can be reset after execution", async () => {
+      render(<TestApp/>)
+
+      await userEvent.click(screen.getByText("button"))
+
+      latch.resolve()
+
+      await waitFor(async () => {
+        expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
+        expect(screen.getByText("result: 2")).toBeDefined()
+        expect(screen.getByText("error: null")).toBeDefined()
+      })
+
+      await userEvent.click(screen.getByText("reset"))
+
+      await waitFor(async () => {
+        expect(screen.getByText(`state: ${RequestStates.Pending}`)).toBeDefined()
+        expect(screen.getByText("result: null")).toBeDefined()
+        expect(screen.getByText("error: null")).toBeDefined()
+      })
+    })
   })
 
   describe("immediate = true", async () => {
@@ -228,6 +274,7 @@ describe("usePreparedRequest", async () => {
           <span>state: {request.state.value}</span>
           <span>result: {request.value ?? "null"}</span>
           <span>error: {request.error?.message ?? "null"}</span>
+          <button onClick={request.reset}>reset</button>
         </div>
       )
     }
@@ -271,6 +318,26 @@ describe("usePreparedRequest", async () => {
         expect(screen.getByText(`state: ${RequestStates.Failed}`)).toBeDefined()
         expect(screen.getByText("result: null")).toBeDefined()
         expect(screen.getByText("error: mistake")).toBeDefined()
+      })
+    })
+
+    it("Can be reset after execution", async () => {
+      render(<TestApp input={1}/>)
+
+      latch.resolve()
+
+      await waitFor(async () => {
+        expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
+        expect(screen.getByText("result: 2")).toBeDefined()
+        expect(screen.getByText("error: null")).toBeDefined()
+      })
+
+      await userEvent.click(screen.getByText("reset"))
+
+      await waitFor(async () => {
+        expect(screen.getByText(`state: ${RequestStates.Pending}`)).toBeDefined()
+        expect(screen.getByText("result: null")).toBeDefined()
+        expect(screen.getByText("error: null")).toBeDefined()
       })
     })
 
