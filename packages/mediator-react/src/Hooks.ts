@@ -1,7 +1,7 @@
 import { AbstractCommand, AbstractQuery, AbstractRequest, ArgsOf, ClassOf, ResultOf } from "@tommypersson/mediator-core"
 import { useCallback, useEffect, useState } from "react"
 import { useMediator } from "./MediatorContext"
-import { RequestState } from "./RequestState"
+import { makeFailed, makeInProgress, makePending, makeSuccessful, State } from "./State"
 import { useDeepEqualMemo } from "./utils"
 
 export type CallbackOf<
@@ -14,47 +14,47 @@ export type CallbackOf<
  * The result of {@link useRequest}.
  */
 export interface RequestHook<
-  TRequest extends AbstractRequest<TArgs, TValue>,
+  TRequest extends AbstractRequest<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
-  TValue = ResultOf<TRequest>
+  TResult = ResultOf<TRequest>
 > {
   readonly execute: CallbackOf<TRequest>
   readonly reset: () => void
 
-  readonly state: RequestState<TRequest>
+  readonly state: State<TRequest>
 }
 
 /**
  * The result of {@link useQuery}.
  */
 export type QueryHook<
-  TQuery extends AbstractQuery<TArgs, TValue>,
+  TQuery extends AbstractQuery<TArgs, TResult>,
   TArgs = ArgsOf<TQuery>,
-  TValue = ResultOf<TQuery>
-> = RequestHook<TQuery, TArgs, TValue>
+  TResult = ResultOf<TQuery>
+> = RequestHook<TQuery, TArgs, TResult>
 
 /**
  * The result of {@link useCommand}.
  */
 export type CommandHook<
-  TCommand extends AbstractCommand<TArgs, TValue>,
+  TCommand extends AbstractCommand<TArgs, TResult>,
   TArgs = ArgsOf<TCommand>,
-  TValue = ResultOf<TCommand>
-> = RequestHook<TCommand, TArgs, TValue>
+  TResult = ResultOf<TCommand>
+> = RequestHook<TCommand, TArgs, TResult>
 
 /**
  * The result of {@link usePreparedRequest}.
  */
 export interface PreparedRequestHook<
-  TRequest extends AbstractRequest<TArgs, TValue>,
+  TRequest extends AbstractRequest<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
-  TValue = ResultOf<TRequest>
+  TResult = ResultOf<TRequest>
 > {
   readonly execute: () => void
   readonly reset: () => void
 
-  readonly state: RequestState<TRequest>
-  readonly args: TArgs
+  readonly state: State<TRequest>
+  readonly preparedArgs: TArgs
 }
 
 /**
@@ -70,10 +70,10 @@ export type PreparedQueryHook<
  * The result of {@link usePreparedCommand}.
  */
 export type PreparedCommandHook<
-  TCommand extends AbstractCommand<TArgs, TValue>,
+  TCommand extends AbstractCommand<TArgs, TResult>,
   TArgs = ArgsOf<TCommand>,
-  TValue = ResultOf<TCommand>,
-> = PreparedRequestHook<TCommand, TArgs, TValue>
+  TResult = ResultOf<TCommand>,
+> = PreparedRequestHook<TCommand, TArgs, TResult>
 
 export interface RequestOptions {
 }
@@ -96,37 +96,37 @@ export type PreparedCommandOptions = RequestOptions
  * Needs to be used inside a {@link MediatorContext.Provider}.
  */
 export function useRequest<
-  TRequest extends AbstractRequest<TArgs, TValue>,
+  TRequest extends AbstractRequest<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
-  TValue = ResultOf<TRequest>,
+  TResult = ResultOf<TRequest>,
 >(
   requestClass: ClassOf<TRequest>,
   options?: RequestOptions
 ): RequestHook<TRequest> {
   const mediator = useMediator()
 
-  const [state, setState] = useState<RequestState<TRequest>>(RequestState.pending())
+  const [state, setState] = useState<State<TRequest>>(makePending())
 
   const execute = useCallback(async (args: TArgs) => {
-    setState(RequestState.inProgress(args))
+    setState(makeInProgress(args))
 
     try {
-      const value: TValue = await mediator.send(requestClass, args)
-      setState(RequestState.successful(args, value))
+      const result: TResult = await mediator.send(requestClass, args)
+      setState(makeSuccessful(args, result))
     } catch (e) {
       let error: Error
       if (e instanceof Error) {
         error = e
       } else {
-        error = new Error(`Error during mediator request: ${e}`)
+        error = new Error(`Error during mediator request: ${e}`, { cause: e })
       }
 
-      setState(RequestState.failed(args, error))
+      setState(makeFailed(args, error))
     }
   }, [requestClass, mediator, setState])
 
   const reset = useCallback(() => {
-    setState(RequestState.pending<TRequest>())
+    setState(makePending())
   }, [setState])
 
   return {
@@ -197,7 +197,7 @@ export function usePreparedRequest<
 
   return {
     ...original,
-    args,
+    preparedArgs: args,
     execute
   }
 }

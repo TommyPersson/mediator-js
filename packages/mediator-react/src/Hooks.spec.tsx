@@ -1,18 +1,18 @@
 import {
   AbstractCommand,
   ICommandHandler,
-  MediatorRegistry,
   IRequestContext,
   Mediator,
+  MediatorRegistry,
 } from "@tommypersson/mediator-core"
-import { useCallback } from "react"
 import * as React from "react"
+import { useCallback } from "react"
 import { beforeEach, describe, expect, it } from "vitest"
 import { usePreparedRequest, useRequest } from "./Hooks"
 import { MediatorContext } from "./MediatorContext"
 import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { RequestStates } from "./RequestState"
+import { StateKind } from "./State"
 import { Deferred } from "./utils"
 
 let latch = new Deferred<void>()
@@ -45,18 +45,18 @@ describe("useRequest", async () => {
 
     const state = request.state;
 
-    const content =  state.isPending() ? (
+    const content = state.kind === StateKind.Pending ? (
       <></>
-    ) : state.isInProgress() ? (
+    ) : state.kind === StateKind.InProgress ? (
       <>
         <span>input: {state.args.input}</span>
       </>
-    ) : state.isSuccessful() ? (
+    ) : state.kind === StateKind.Successful ? (
       <>
         <span>input: {state.args.input}</span>
         <span>result: {state.result}</span>
       </>
-    )  : state.isFailed() ? (
+    )  : state.kind === StateKind.Failed ? (
       <>
         <span>input: {state.args.input}</span>
         <span>error: {state.error.message}</span>
@@ -85,7 +85,7 @@ describe("useRequest", async () => {
     render(<TestApp/>)
 
     await waitFor(async () => {
-      expect(screen.getByText(`state: ${RequestStates.Pending}`)).toBeDefined()
+      expect(screen.getByText(`state: ${StateKind.Pending}`)).toBeDefined()
     })
   })
 
@@ -95,7 +95,7 @@ describe("useRequest", async () => {
     await userEvent.click(screen.getByText("button"))
 
     await waitFor(async () => {
-      expect(screen.getByText(`state: ${RequestStates.InProgress}`)).toBeDefined()
+      expect(screen.getByText(`state: ${StateKind.InProgress}`)).toBeDefined()
     })
   })
 
@@ -107,7 +107,7 @@ describe("useRequest", async () => {
     latch.resolve()
 
     await waitFor(async () => {
-      expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
+      expect(screen.getByText(`state: ${StateKind.Successful}`)).toBeDefined()
       expect(screen.getByText("result: 2")).toBeDefined()
     })
   })
@@ -120,7 +120,7 @@ describe("useRequest", async () => {
     latch.reject(new Error("mistake"))
 
     await waitFor(async () => {
-      expect(screen.getByText(`state: ${RequestStates.Failed}`)).toBeDefined()
+      expect(screen.getByText(`state: ${StateKind.Failed}`)).toBeDefined()
       expect(screen.getByText("error: mistake")).toBeDefined()
     })
   })
@@ -133,7 +133,7 @@ describe("useRequest", async () => {
     latch.reject("NotError" as any)
 
     await waitFor(async () => {
-      expect(screen.getByText(`state: ${RequestStates.Failed}`)).toBeDefined()
+      expect(screen.getByText(`state: ${StateKind.Failed}`)).toBeDefined()
       expect(screen.getByText("error: Error during mediator request: NotError")).toBeDefined()
     })
   })
@@ -146,14 +146,14 @@ describe("useRequest", async () => {
     latch.resolve()
 
     await waitFor(async () => {
-      expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
+      expect(screen.getByText(`state: ${StateKind.Successful}`)).toBeDefined()
       expect(screen.getByText("result: 2")).toBeDefined()
     })
 
     await userEvent.click(screen.getByText("reset"))
 
     await waitFor(async () => {
-      expect(screen.getByText(`state: ${RequestStates.Pending}`)).toBeDefined()
+      expect(screen.getByText(`state: ${StateKind.Pending}`)).toBeDefined()
     })
   })
 })
@@ -165,20 +165,20 @@ describe("usePreparedRequest", async () => {
 
     const state = request.state;
 
-    const content =  state.isPending() ? (
+    const content = state.kind === StateKind.Pending ? (
       <>
-        <span>input: {request.args.input}</span>
+        <span>input: {request.preparedArgs.input}</span>
       </>
-    ) : state.isInProgress() ? (
+    ) : state.kind === StateKind.InProgress ? (
       <>
-        <span>input: {request.args.input}</span>
+        <span>input: {request.preparedArgs.input}</span>
       </>
-    ) : state.isSuccessful() ? (
+    ) : state.kind === StateKind.Successful ? (
       <>
-        <span>input: {request.args.input}</span>
+        <span>input: {request.preparedArgs.input}</span>
         <span>result: {state.result}</span>
       </>
-    )  : state.isFailed() ? (
+    )  : state.kind === StateKind.Failed ? (
       <>
         <span>input: {state.args.input}</span>
         <span>error: {state.error.message}</span>
@@ -217,7 +217,7 @@ describe("usePreparedRequest", async () => {
       render(<TestApp/>)
 
       await waitFor(async () => {
-        expect(screen.getByText(`state: ${RequestStates.Pending}`)).toBeDefined()
+        expect(screen.getByText(`state: ${StateKind.Pending}`)).toBeDefined()
       })
     })
 
@@ -227,7 +227,7 @@ describe("usePreparedRequest", async () => {
       await userEvent.click(screen.getByText("button"))
 
       await waitFor(async () => {
-        expect(screen.getByText(`state: ${RequestStates.InProgress}`)).toBeDefined()
+        expect(screen.getByText(`state: ${StateKind.InProgress}`)).toBeDefined()
       })
     })
 
@@ -239,7 +239,7 @@ describe("usePreparedRequest", async () => {
       latch.resolve()
 
       await waitFor(async () => {
-        expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
+        expect(screen.getByText(`state: ${StateKind.Successful}`)).toBeDefined()
         expect(screen.getByText("result: 2")).toBeDefined()
       })
     })
@@ -252,7 +252,7 @@ describe("usePreparedRequest", async () => {
       latch.reject(new Error("mistake"))
 
       await waitFor(async () => {
-        expect(screen.getByText(`state: ${RequestStates.Failed}`)).toBeDefined()
+        expect(screen.getByText(`state: ${StateKind.Failed}`)).toBeDefined()
         expect(screen.getByText("error: mistake")).toBeDefined()
       })
     })
@@ -265,14 +265,14 @@ describe("usePreparedRequest", async () => {
       latch.resolve()
 
       await waitFor(async () => {
-        expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
+        expect(screen.getByText(`state: ${StateKind.Successful}`)).toBeDefined()
         expect(screen.getByText("result: 2")).toBeDefined()
       })
 
       await userEvent.click(screen.getByText("reset"))
 
       await waitFor(async () => {
-        expect(screen.getByText(`state: ${RequestStates.Pending}`)).toBeDefined()
+        expect(screen.getByText(`state: ${StateKind.Pending}`)).toBeDefined()
       })
     })
   })
@@ -299,7 +299,7 @@ describe("usePreparedRequest", async () => {
       render(<TestApp input={1}/>)
 
       await waitFor(async () => {
-        expect(screen.getByText(`state: ${RequestStates.InProgress}`)).toBeDefined()
+        expect(screen.getByText(`state: ${StateKind.InProgress}`)).toBeDefined()
         expect(screen.getByText("input: 1")).toBeDefined()
       })
     })
@@ -310,7 +310,7 @@ describe("usePreparedRequest", async () => {
       latch.resolve()
 
       await waitFor(async () => {
-        expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
+        expect(screen.getByText(`state: ${StateKind.Successful}`)).toBeDefined()
         expect(screen.getByText("result: 2")).toBeDefined()
       })
     })
@@ -321,7 +321,7 @@ describe("usePreparedRequest", async () => {
       latch.reject(new Error("mistake"))
 
       await waitFor(async () => {
-        expect(screen.getByText(`state: ${RequestStates.Failed}`)).toBeDefined()
+        expect(screen.getByText(`state: ${StateKind.Failed}`)).toBeDefined()
         expect(screen.getByText("error: mistake")).toBeDefined()
       })
     })
@@ -332,14 +332,14 @@ describe("usePreparedRequest", async () => {
       latch.resolve()
 
       await waitFor(async () => {
-        expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
+        expect(screen.getByText(`state: ${StateKind.Successful}`)).toBeDefined()
         expect(screen.getByText("result: 2")).toBeDefined()
       })
 
       await userEvent.click(screen.getByText("reset"))
 
       await waitFor(async () => {
-        expect(screen.getByText(`state: ${RequestStates.Pending}`)).toBeDefined()
+        expect(screen.getByText(`state: ${StateKind.Pending}`)).toBeDefined()
       })
     })
 
@@ -349,7 +349,7 @@ describe("usePreparedRequest", async () => {
       latch.resolve()
 
       await waitFor(async () => {
-        expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
+        expect(screen.getByText(`state: ${StateKind.Successful}`)).toBeDefined()
         expect(screen.getByText("result: 2")).toBeDefined()
       })
 
@@ -360,7 +360,7 @@ describe("usePreparedRequest", async () => {
       latch.resolve()
 
       await waitFor(async () => {
-        expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
+        expect(screen.getByText(`state: ${StateKind.Successful}`)).toBeDefined()
         expect(screen.getByText("result: 3")).toBeDefined()
       })
 
