@@ -21,13 +21,8 @@ export interface RequestHook<
   readonly execute: CallbackOf<TRequest>
   readonly reset: () => void
 
-  readonly state: RequestState
-  readonly args: TArgs | null
-  readonly error: Error | null
-  readonly value: TValue | null
+  readonly state: RequestState<TRequest>
 }
-
-
 
 /**
  * The result of {@link useQuery}.
@@ -58,10 +53,8 @@ export interface PreparedRequestHook<
   readonly execute: () => void
   readonly reset: () => void
 
-  readonly state: RequestState
-  readonly args: TArgs | null
-  readonly error: Error | null
-  readonly value: TValue | null
+  readonly state: RequestState<TRequest>
+  readonly args: TArgs
 }
 
 /**
@@ -112,29 +105,14 @@ export function useRequest<
 ): RequestHook<TRequest> {
   const mediator = useMediator()
 
-  const [stateBag, setStateBag] = useState({
-    state: RequestState.pending(),
-    args: <TArgs | null>null,
-    error: <Error | null>null,
-    value: <TValue | null>null,
-  })
+  const [state, setState] = useState<RequestState<TRequest>>(RequestState.pending())
 
   const execute = useCallback(async (args: TArgs) => {
-    setStateBag({
-      state: RequestState.inProgress(),
-      args: args,
-      error: null,
-      value: null,
-    })
+    setState(RequestState.inProgress(args))
 
     try {
       const value: TValue = await mediator.send(requestClass, args)
-      setStateBag({
-        state: RequestState.successful(),
-        args: args,
-        error: null,
-        value: value,
-      })
+      setState(RequestState.successful(args, value))
     } catch (e) {
       let error: Error
       if (e instanceof Error) {
@@ -143,28 +121,18 @@ export function useRequest<
         error = new Error(`Error during mediator request: ${e}`)
       }
 
-      setStateBag({
-        state: RequestState.failed(),
-        args: args,
-        error: error,
-        value: null,
-      })
+      setState(RequestState.failed(args, error))
     }
-  }, [requestClass, mediator, setStateBag])
+  }, [requestClass, mediator, setState])
 
   const reset = useCallback(() => {
-    setStateBag({
-      state: RequestState.pending(),
-      args: <TArgs | null>null,
-      error: <Error | null>null,
-      value: <TValue | null>null,
-    })
-  }, [setStateBag])
+    setState(RequestState.pending<TRequest>())
+  }, [setState])
 
   return {
     execute,
     reset,
-    ...stateBag
+    state
   }
 }
 
@@ -229,8 +197,8 @@ export function usePreparedRequest<
 
   return {
     ...original,
-    execute,
     args,
+    execute
   }
 }
 

@@ -43,11 +43,30 @@ describe("useRequest", async () => {
     const request = useRequest(TestCommand)
     const handleClick = useCallback(() => request.execute({ input: 1 }), [request.execute])
 
+    const state = request.state;
+
+    const content =  state.isPending() ? (
+      <></>
+    ) : state.isInProgress() ? (
+      <>
+        <span>input: {state.args.input}</span>
+      </>
+    ) : state.isSuccessful() ? (
+      <>
+        <span>input: {state.args.input}</span>
+        <span>result: {state.result}</span>
+      </>
+    )  : state.isFailed() ? (
+      <>
+        <span>input: {state.args.input}</span>
+        <span>error: {state.error.message}</span>
+      </>
+    ) : null
+
     return (
       <div>
-        <span>state: {request.state.value}</span>
-        <span>result: {request.value ?? "null"}</span>
-        <span>error: {request.error?.message ?? "null"}</span>
+        <span>state: {state.kind}</span>
+        {content}
         <button onClick={handleClick}>button</button>
         <button onClick={request.reset}>reset</button>
       </div>
@@ -67,8 +86,6 @@ describe("useRequest", async () => {
 
     await waitFor(async () => {
       expect(screen.getByText(`state: ${RequestStates.Pending}`)).toBeDefined()
-      expect(screen.getByText("result: null")).toBeDefined()
-      expect(screen.getByText("error: null")).toBeDefined()
     })
   })
 
@@ -79,8 +96,6 @@ describe("useRequest", async () => {
 
     await waitFor(async () => {
       expect(screen.getByText(`state: ${RequestStates.InProgress}`)).toBeDefined()
-      expect(screen.getByText("result: null")).toBeDefined()
-      expect(screen.getByText("error: null")).toBeDefined()
     })
   })
 
@@ -94,7 +109,6 @@ describe("useRequest", async () => {
     await waitFor(async () => {
       expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
       expect(screen.getByText("result: 2")).toBeDefined()
-      expect(screen.getByText("error: null")).toBeDefined()
     })
   })
 
@@ -107,7 +121,6 @@ describe("useRequest", async () => {
 
     await waitFor(async () => {
       expect(screen.getByText(`state: ${RequestStates.Failed}`)).toBeDefined()
-      expect(screen.getByText("result: null")).toBeDefined()
       expect(screen.getByText("error: mistake")).toBeDefined()
     })
   })
@@ -121,7 +134,6 @@ describe("useRequest", async () => {
 
     await waitFor(async () => {
       expect(screen.getByText(`state: ${RequestStates.Failed}`)).toBeDefined()
-      expect(screen.getByText("result: null")).toBeDefined()
       expect(screen.getByText("error: Error during mediator request: NotError")).toBeDefined()
     })
   })
@@ -136,20 +148,52 @@ describe("useRequest", async () => {
     await waitFor(async () => {
       expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
       expect(screen.getByText("result: 2")).toBeDefined()
-      expect(screen.getByText("error: null")).toBeDefined()
     })
 
     await userEvent.click(screen.getByText("reset"))
 
     await waitFor(async () => {
       expect(screen.getByText(`state: ${RequestStates.Pending}`)).toBeDefined()
-      expect(screen.getByText("result: null")).toBeDefined()
-      expect(screen.getByText("error: null")).toBeDefined()
     })
   })
 })
 
 describe("usePreparedRequest", async () => {
+
+  function TestComponent(props: { immediate: boolean, input: number }) {
+    const request = usePreparedRequest(TestCommand, { input: props.input }, { immediate: props.immediate })
+
+    const state = request.state;
+
+    const content =  state.isPending() ? (
+      <>
+        <span>input: {request.args.input}</span>
+      </>
+    ) : state.isInProgress() ? (
+      <>
+        <span>input: {request.args.input}</span>
+      </>
+    ) : state.isSuccessful() ? (
+      <>
+        <span>input: {request.args.input}</span>
+        <span>result: {state.result}</span>
+      </>
+    )  : state.isFailed() ? (
+      <>
+        <span>input: {state.args.input}</span>
+        <span>error: {state.error.message}</span>
+      </>
+    ) : null
+
+    return (
+      <div>
+        <span>state: {state.kind}</span>
+        {content}
+        <button onClick={request.execute}>button</button>
+        <button onClick={request.reset}>reset</button>
+      </div>
+    )
+  }
 
   describe("immediate = false", async () => {
 
@@ -161,24 +205,10 @@ describe("usePreparedRequest", async () => {
       }
     })
 
-    function TestComponent() {
-      const request = usePreparedRequest(TestCommand, { input: 1 })
-
-      return (
-        <div>
-          <span>state: {request.state.value}</span>
-          <span>result: {request.value ?? "null"}</span>
-          <span>error: {request.error?.message ?? "null"}</span>
-          <button onClick={request.execute}>button</button>
-          <button onClick={request.reset}>reset</button>
-        </div>
-      )
-    }
-
     function TestApp() {
       return (
         <MediatorContext.Provider value={new Mediator()}>
-          <TestComponent/>
+          <TestComponent input={1} immediate={false} />
         </MediatorContext.Provider>
       )
     }
@@ -188,8 +218,6 @@ describe("usePreparedRequest", async () => {
 
       await waitFor(async () => {
         expect(screen.getByText(`state: ${RequestStates.Pending}`)).toBeDefined()
-        expect(screen.getByText("result: null")).toBeDefined()
-        expect(screen.getByText("error: null")).toBeDefined()
       })
     })
 
@@ -200,8 +228,6 @@ describe("usePreparedRequest", async () => {
 
       await waitFor(async () => {
         expect(screen.getByText(`state: ${RequestStates.InProgress}`)).toBeDefined()
-        expect(screen.getByText("result: null")).toBeDefined()
-        expect(screen.getByText("error: null")).toBeDefined()
       })
     })
 
@@ -215,7 +241,6 @@ describe("usePreparedRequest", async () => {
       await waitFor(async () => {
         expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
         expect(screen.getByText("result: 2")).toBeDefined()
-        expect(screen.getByText("error: null")).toBeDefined()
       })
     })
 
@@ -228,7 +253,6 @@ describe("usePreparedRequest", async () => {
 
       await waitFor(async () => {
         expect(screen.getByText(`state: ${RequestStates.Failed}`)).toBeDefined()
-        expect(screen.getByText("result: null")).toBeDefined()
         expect(screen.getByText("error: mistake")).toBeDefined()
       })
     })
@@ -243,15 +267,12 @@ describe("usePreparedRequest", async () => {
       await waitFor(async () => {
         expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
         expect(screen.getByText("result: 2")).toBeDefined()
-        expect(screen.getByText("error: null")).toBeDefined()
       })
 
       await userEvent.click(screen.getByText("reset"))
 
       await waitFor(async () => {
         expect(screen.getByText(`state: ${RequestStates.Pending}`)).toBeDefined()
-        expect(screen.getByText("result: null")).toBeDefined()
-        expect(screen.getByText("error: null")).toBeDefined()
       })
     })
   })
@@ -266,23 +287,10 @@ describe("usePreparedRequest", async () => {
       }
     })
 
-    function TestComponent(props: { input: number }) {
-      const request = usePreparedRequest(TestCommand, { input: props.input }, { immediate: true })
-
-      return (
-        <div>
-          <span>state: {request.state.value}</span>
-          <span>result: {request.value ?? "null"}</span>
-          <span>error: {request.error?.message ?? "null"}</span>
-          <button onClick={request.reset}>reset</button>
-        </div>
-      )
-    }
-
     function TestApp(props: { input: number }) {
       return (
         <MediatorContext.Provider value={new Mediator()}>
-          <TestComponent input={props.input}/>
+          <TestComponent input={props.input} immediate={true} />
         </MediatorContext.Provider>
       )
     }
@@ -292,8 +300,7 @@ describe("usePreparedRequest", async () => {
 
       await waitFor(async () => {
         expect(screen.getByText(`state: ${RequestStates.InProgress}`)).toBeDefined()
-        expect(screen.getByText("result: null")).toBeDefined()
-        expect(screen.getByText("error: null")).toBeDefined()
+        expect(screen.getByText("input: 1")).toBeDefined()
       })
     })
 
@@ -305,7 +312,6 @@ describe("usePreparedRequest", async () => {
       await waitFor(async () => {
         expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
         expect(screen.getByText("result: 2")).toBeDefined()
-        expect(screen.getByText("error: null")).toBeDefined()
       })
     })
 
@@ -316,7 +322,6 @@ describe("usePreparedRequest", async () => {
 
       await waitFor(async () => {
         expect(screen.getByText(`state: ${RequestStates.Failed}`)).toBeDefined()
-        expect(screen.getByText("result: null")).toBeDefined()
         expect(screen.getByText("error: mistake")).toBeDefined()
       })
     })
@@ -329,15 +334,12 @@ describe("usePreparedRequest", async () => {
       await waitFor(async () => {
         expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
         expect(screen.getByText("result: 2")).toBeDefined()
-        expect(screen.getByText("error: null")).toBeDefined()
       })
 
       await userEvent.click(screen.getByText("reset"))
 
       await waitFor(async () => {
         expect(screen.getByText(`state: ${RequestStates.Pending}`)).toBeDefined()
-        expect(screen.getByText("result: null")).toBeDefined()
-        expect(screen.getByText("error: null")).toBeDefined()
       })
     })
 
@@ -349,7 +351,6 @@ describe("usePreparedRequest", async () => {
       await waitFor(async () => {
         expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
         expect(screen.getByText("result: 2")).toBeDefined()
-        expect(screen.getByText("error: null")).toBeDefined()
       })
 
       latch = new Deferred<void>()
@@ -361,7 +362,6 @@ describe("usePreparedRequest", async () => {
       await waitFor(async () => {
         expect(screen.getByText(`state: ${RequestStates.Successful}`)).toBeDefined()
         expect(screen.getByText("result: 3")).toBeDefined()
-        expect(screen.getByText("error: null")).toBeDefined()
       })
 
       latch.resolve()

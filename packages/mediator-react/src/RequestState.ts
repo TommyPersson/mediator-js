@@ -1,3 +1,5 @@
+import { AbstractRequest, ArgsOf, ResultOf } from "@tommypersson/mediator-core";
+
 export enum RequestStates {
   Pending = "pending",
   InProgress = "in_progress",
@@ -5,49 +7,112 @@ export enum RequestStates {
   Failed = "failed",
 }
 
-export class RequestState {
-  private constructor(
-    private readonly _value: RequestStates,
+export abstract class RequestState<
+  TRequest extends AbstractRequest<TArgs, TResult>,
+  TArgs = ArgsOf<TRequest>,
+  TResult = ResultOf<TRequest>,
+> {
+  abstract readonly kind: RequestStates
+
+  static pending<
+    TRequest extends AbstractRequest<TArgs, TResult>,
+    TArgs = ArgsOf<TRequest>,
+    TResult = ResultOf<TRequest>,
+  >(): RequestState<TRequest> {
+    return new Pending()
+  }
+
+  static inProgress<
+    TRequest extends AbstractRequest<TArgs, TResult>,
+    TArgs = ArgsOf<TRequest>,
+    TResult = ResultOf<TRequest>,
+  >(args: ArgsOf<TRequest>): RequestState<TRequest> {
+    return new InProgress(args)
+  }
+
+  static successful<
+    TRequest extends AbstractRequest<TArgs, TResult>,
+    TArgs = ArgsOf<TRequest>,
+    TResult = ResultOf<TRequest>,
+  >(args: ArgsOf<TRequest>, result: ResultOf<TRequest>): RequestState<TRequest> {
+    return new Successful(args, result)
+  }
+
+  static failed<
+    TRequest extends AbstractRequest<TArgs, TResult>,
+    TArgs = ArgsOf<TRequest>,
+    TResult = ResultOf<TRequest>,
+  >(args: ArgsOf<TRequest>, error: Error): RequestState<any> {
+    return new Failed(args, error)
+  }
+
+  isPending(): this is Pending<TRequest> {
+    return this instanceof Pending
+  }
+
+  isInProgress(): this is InProgress<TRequest> {
+    return this instanceof InProgress
+  }
+
+  isSuccessful(): this is Successful<TRequest> {
+    return this instanceof Successful
+  }
+
+  isFailed(): this is Failed<TRequest> {
+    return this instanceof Failed
+  }
+}
+
+export class Pending<
+  TRequest extends AbstractRequest<TArgs, TResult>,
+  TArgs = ArgsOf<TRequest>,
+  TResult = ResultOf<TRequest>,
+> extends RequestState<TRequest, TArgs, TResult> {
+
+  readonly kind = RequestStates.Pending
+}
+
+export class InProgress<
+  TRequest extends AbstractRequest<TArgs, TResult>,
+  TArgs = ArgsOf<TRequest>,
+  TResult = ResultOf<TRequest>,
+> extends RequestState<TRequest, TArgs, TResult> {
+
+  readonly kind = RequestStates.InProgress
+
+  constructor(readonly args: ArgsOf<TRequest>) {
+    super();
+  }
+}
+
+export class Successful<
+  TRequest extends AbstractRequest<TArgs, TResult>,
+  TArgs = ArgsOf<TRequest>,
+  TResult = ResultOf<TRequest>,
+> extends RequestState<TRequest, TArgs, TResult> {
+
+  readonly kind = RequestStates.Successful
+
+  constructor(
+    readonly args: ArgsOf<TRequest>,
+    readonly result: ResultOf<TRequest>
   ) {
+    super();
   }
+}
 
-  static from(state: RequestStates): RequestState {
-    return new RequestState(state)
-  }
+export class Failed<
+  TRequest extends AbstractRequest<TArgs, TResult>,
+  TArgs = ArgsOf<TRequest>,
+  TResult = ResultOf<TRequest>,
+> extends RequestState<TRequest, TArgs, TResult> {
 
-  static pending(): RequestState {
-    return RequestState.from(RequestStates.Pending)
-  }
+  readonly kind = RequestStates.Failed
 
-  static inProgress(): RequestState {
-    return RequestState.from(RequestStates.InProgress)
-  }
-
-  static successful(): RequestState {
-    return RequestState.from(RequestStates.Successful)
-  }
-
-  static failed(): RequestState {
-    return RequestState.from(RequestStates.Failed)
-  }
-
-  get value(): RequestStates {
-    return this._value
-  }
-
-  isPending() {
-    return this._value === RequestStates.Pending
-  }
-
-  isInProgress() {
-    return this._value === RequestStates.InProgress
-  }
-
-  isSuccessful() {
-    return this._value === RequestStates.Successful
-  }
-
-  isFailed() {
-    return this._value === RequestStates.Failed
+  constructor(
+    readonly args: ArgsOf<TRequest>,
+    readonly error: Error,
+  ) {
+    super();
   }
 }
