@@ -13,6 +13,7 @@ export interface Pending<
   TResult = ResultOf<TRequest>,
 > {
   readonly kind: StateKind.Pending
+  readonly isInProgress: false
   readonly args: null
   readonly result: null
   readonly error: null
@@ -24,6 +25,7 @@ export interface InProgress<
   TResult = ResultOf<TRequest>,
 > {
   readonly kind: StateKind.InProgress
+  readonly isInProgress: true
   readonly args: TArgs
   readonly result: null
   readonly error: null
@@ -35,6 +37,7 @@ export interface Successful<
   TResult = ResultOf<TRequest>,
 > {
   readonly kind: StateKind.Successful
+  readonly isInProgress: false
   readonly args: TArgs
   readonly result: TResult
   readonly error: null
@@ -46,6 +49,7 @@ export interface Failed<
   TResult = ResultOf<TRequest>,
 > {
   readonly kind: StateKind.Failed
+  readonly isInProgress: false
   readonly args: TArgs
   readonly result: null
   readonly error: Error
@@ -62,7 +66,7 @@ export function makePending<
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>,
 >(): Pending<TRequest> {
-  return { kind: StateKind.Pending, args: null, result: null, error: null }
+  return { kind: StateKind.Pending, isInProgress: false, args: null, result: null, error: null }
 }
 
 export function makeInProgress<
@@ -70,7 +74,7 @@ export function makeInProgress<
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>,
 >(args: ArgsOf<TRequest>): InProgress<TRequest> {
-  return { kind: StateKind.InProgress, args, result: null, error: null }
+  return { kind: StateKind.InProgress, isInProgress: true, args, result: null, error: null }
 }
 
 export function makeSuccessful<
@@ -78,7 +82,7 @@ export function makeSuccessful<
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>,
 >(args: ArgsOf<TRequest>, result: ResultOf<TRequest>): Successful<TRequest> {
-  return { kind: StateKind.Successful, args, result, error: null }
+  return { kind: StateKind.Successful, isInProgress: false, args, result, error: null }
 }
 
 export function makeFailed<
@@ -86,5 +90,5 @@ export function makeFailed<
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>,
 >(args: ArgsOf<TRequest>, error: Error): Failed<TRequest> {
-  return { kind: StateKind.Failed, args, result: null, error }
+  return { kind: StateKind.Failed, isInProgress: false, args, result: null, error }
 }
