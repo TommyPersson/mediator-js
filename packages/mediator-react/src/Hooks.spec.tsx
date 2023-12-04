@@ -1,13 +1,13 @@
 import {
-  AbstractCommand,
+  AbstractCommand, ArgsOf,
   ICommandHandler,
   IRequestContext,
   Mediator,
-  MediatorRegistry,
+  MediatorRegistry, ResultOf,
 } from "@tommypersson/mediator-core"
 import * as React from "react"
 import { useCallback } from "react"
-import { beforeEach, describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, Test } from "vitest"
 import { usePreparedRequest, useRequest } from "./Hooks"
 import { MediatorContext } from "./MediatorContext"
 import { cleanup, render, screen, waitFor } from "@testing-library/react"
@@ -31,7 +31,10 @@ MediatorRegistry.addHandler(TestCommand, () => new TestCommandHandler())
 
 describe("useRequest", async () => {
 
+  let logs: string[] = []
+
   beforeEach(() => {
+    logs = []
     latch = new Deferred<void>()
     return () => {
       latch.resolve()
@@ -41,7 +44,19 @@ describe("useRequest", async () => {
 
   function TestComponent() {
     const request = useRequest(TestCommand)
-    const handleClick = useCallback(() => request.execute({ input: 1 }), [request.execute])
+    const handleClick = useCallback(() => {
+      request.execute(
+        { input: 1 },
+        {
+          preInProgress: (args: ArgsOf<TestCommand>): void => { logs.push(`preInProgress: ${args.input}`) },
+          postInProgress: (args: ArgsOf<TestCommand>): void => { logs.push(`postInProgress: ${args.input}`) },
+          preSuccess: (result: ResultOf<TestCommand>, args: ArgsOf<TestCommand>): void => { logs.push(`preSuccess: ${args.input} ${result}`) },
+          postSuccess: (result: ResultOf<TestCommand>, args: ArgsOf<TestCommand>): void => { logs.push(`postSuccess: ${args.input} ${result}`) },
+          preFailure: (error: Error, args: ArgsOf<TestCommand>): void => { logs.push(`preFailure: ${args.input} ${error.message}`) },
+          postFailure: (error: Error, args: ArgsOf<TestCommand>): void => { logs.push(`postFailure: ${args.input} ${error.message}`) },
+        }
+      )
+    }, [request.execute])
 
     const state = request.state;
 
@@ -155,6 +170,44 @@ describe("useRequest", async () => {
     await waitFor(async () => {
       expect(screen.getByText(`state: ${StateKind.Pending}`)).toBeDefined()
     })
+  })
+
+  it("Calls life-cycle callbacks (success)", async () => {
+    render(<TestApp/>)
+
+    await userEvent.click(screen.getByText("button"))
+
+    latch.resolve()
+
+    await waitFor(async () => {
+      expect(screen.getByText(`state: ${StateKind.Successful}`)).toBeDefined()
+    })
+
+    expect(logs).toStrictEqual([
+      "preInProgress: 1",
+      "postInProgress: 1",
+      "preSuccess: 1 2",
+      "postSuccess: 1 2",
+    ])
+  })
+
+  it("Calls life-cycle callbacks (failure)", async () => {
+    render(<TestApp/>)
+
+    await userEvent.click(screen.getByText("button"))
+
+    latch.reject(new Error("mistake"))
+
+    await waitFor(async () => {
+      expect(screen.getByText(`state: ${StateKind.Failed}`)).toBeDefined()
+    })
+
+    expect(logs).toStrictEqual([
+      "preInProgress: 1",
+      "postInProgress: 1",
+      "preFailure: 1 mistake",
+      "postFailure: 1 mistake",
+    ])
   })
 })
 

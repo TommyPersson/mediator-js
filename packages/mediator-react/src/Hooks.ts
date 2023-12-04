@@ -8,7 +8,7 @@ export type CallbackOf<
   TRequest extends AbstractRequest<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>,
-> = (args: TArgs) => void
+> = (args: TArgs, options?: ExecuteOptions<TRequest>) => void
 
 /**
  * The result of {@link useRequest}.
@@ -90,6 +90,19 @@ export type PreparedQueryOptions = RequestOptions
 
 export type PreparedCommandOptions = RequestOptions
 
+export interface ExecuteOptions<
+  TRequest extends AbstractRequest<TArgs, TResult>,
+  TArgs = ArgsOf<TRequest>,
+  TResult = ResultOf<TRequest>,
+> {
+  preInProgress?: (args: TArgs) => Promise<void> | void
+  postInProgress?: (args: TArgs) => Promise<void> | void
+  preSuccess?: (result: TResult, args: TArgs) => Promise<void> | void
+  postSuccess?: (result: TResult, args: TArgs) => Promise<void> | void
+  preFailure?: (error: Error, args: TArgs) => Promise<void> | void
+  postFailure?: (error: Error, args: TArgs) => Promise<void> | void
+}
+
 /**
  * This hook takes a {@link AbstractRequest} and returns a {@link RequestHook}.
  *
@@ -107,12 +120,16 @@ export function useRequest<
 
   const [state, setState] = useState<State<TRequest>>(makePending())
 
-  const execute = useCallback(async (args: TArgs) => {
+  const execute = useCallback(async (args: TArgs, options?: ExecuteOptions<TRequest>) => {
+    await runLifeCycleHook(options?.preInProgress, args)
     setState(makeInProgress(args))
+    await runLifeCycleHook(options?.postInProgress, args)
 
     try {
       const result: TResult = await mediator.send(requestClass, args)
+      await runLifeCycleHook(options?.preSuccess, result, args)
       setState(makeSuccessful(args, result))
+      await runLifeCycleHook(options?.postSuccess, result, args)
     } catch (e) {
       let error: Error
       if (e instanceof Error) {
@@ -121,7 +138,9 @@ export function useRequest<
         error = new Error(`Error during mediator request: ${e}`, { cause: e })
       }
 
+      await runLifeCycleHook(options?.preFailure, error, args)
       setState(makeFailed(args, error))
+      await runLifeCycleHook(options?.postFailure, error, args)
     }
   }, [requestClass, mediator, setState])
 
@@ -185,8 +204,8 @@ export function usePreparedRequest<
 
   const memoizedArgs = useDeepEqualMemo(() => args, [args])
 
-  const execute = useCallback(() => {
-    original.execute(memoizedArgs)
+  const execute = useCallback((options?: ExecuteOptions<TRequest>) => {
+    original.execute(memoizedArgs, options)
   }, [original.execute, memoizedArgs])
 
   useEffect(() => {
@@ -230,4 +249,13 @@ export function usePreparedCommand<
   options?: PreparedCommandOptions,
 ): PreparedCommandHook<TCommand> {
   return usePreparedRequest(commandClass, args, options)
+}
+
+async function runLifeCycleHook<TFunction extends (...args: any[]) => Promise<void> | void>(fn: TFunction | null | undefined, ...params: Parameters<TFunction>): Promise<void> {
+  if (fn) {
+    const result = fn(...params)
+    if (result instanceof Promise) {
+      await result
+    }
+  }
 }
