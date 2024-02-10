@@ -1,13 +1,15 @@
 import {
-  AbstractCommand, ArgsOf,
+  AbstractCommand,
+  ArgsOf,
   ICommandHandler,
   IRequestContext,
   Mediator,
-  MediatorRegistry, ResultOf,
+  MediatorRegistry,
+  ResultOf,
 } from "@tommypersson/mediator-core"
 import * as React from "react"
 import { useCallback } from "react"
-import { beforeEach, describe, expect, it, Test } from "vitest"
+import { beforeEach, describe, expect, it } from "vitest"
 import { usePreparedRequest, useRequest } from "./Hooks"
 import { MediatorContext } from "./MediatorContext"
 import { cleanup, render, screen, waitFor } from "@testing-library/react"
@@ -43,7 +45,17 @@ describe("useRequest", async () => {
   })
 
   function TestComponent() {
-    const request = useRequest(TestCommand)
+
+
+    const request = useRequest(TestCommand, {
+      preInProgress: (args: ArgsOf<TestCommand>): void => { logs.push(`preInProgress0: ${args.input}`) },
+      postInProgress: (args: ArgsOf<TestCommand>): void => { logs.push(`postInProgress0: ${args.input}`) },
+      preSuccess: (result: ResultOf<TestCommand>, args: ArgsOf<TestCommand>): void => { logs.push(`preSuccess0: ${args.input} ${result}`) },
+      postSuccess: (result: ResultOf<TestCommand>, args: ArgsOf<TestCommand>): void => { logs.push(`postSuccess0: ${args.input} ${result}`) },
+      preFailure: (error: Error, args: ArgsOf<TestCommand>): void => { logs.push(`preFailure0: ${args.input} ${error.message}`) },
+      postFailure: (error: Error, args: ArgsOf<TestCommand>): void => { logs.push(`postFailure0: ${args.input} ${error.message}`) },
+    })
+
     const handleClick = useCallback(() => {
       request.execute(
         { input: 1 },
@@ -163,13 +175,13 @@ describe("useRequest", async () => {
     await waitFor(async () => {
       expect(screen.getByText(`state: ${StateKind.Successful}`)).toBeDefined()
       expect(screen.getByText("result: 2")).toBeDefined()
-    })
+    }, { timeout: 1 })
 
     await userEvent.click(screen.getByText("reset"))
 
     await waitFor(async () => {
       expect(screen.getByText(`state: ${StateKind.Pending}`)).toBeDefined()
-    })
+    }, { timeout: 1 })
   })
 
   it("Calls life-cycle callbacks (success)", async () => {
@@ -184,10 +196,14 @@ describe("useRequest", async () => {
     })
 
     expect(logs).toStrictEqual([
+      "preInProgress0: 1",
       "preInProgress: 1",
       "postInProgress: 1",
+      "postInProgress0: 1",
+      "preSuccess0: 1 2",
       "preSuccess: 1 2",
       "postSuccess: 1 2",
+      "postSuccess0: 1 2",
     ])
   })
 
@@ -203,10 +219,14 @@ describe("useRequest", async () => {
     })
 
     expect(logs).toStrictEqual([
+      "preInProgress0: 1",
       "preInProgress: 1",
       "postInProgress: 1",
+      "postInProgress0: 1",
+      "preFailure0: 1 mistake",
       "preFailure: 1 mistake",
       "postFailure: 1 mistake",
+      "postFailure0: 1 mistake",
     ])
   })
 })
@@ -320,13 +340,13 @@ describe("usePreparedRequest", async () => {
       await waitFor(async () => {
         expect(screen.getByText(`state: ${StateKind.Successful}`)).toBeDefined()
         expect(screen.getByText("result: 2")).toBeDefined()
-      })
+      }, { timeout: 1 })
 
       await userEvent.click(screen.getByText("reset"))
 
       await waitFor(async () => {
-        expect(screen.getByText(`state: ${StateKind.Pending}`)).toBeDefined()
-      })
+         expect(screen.getByText(`state: ${StateKind.Pending}`)).toBeDefined()
+      }, { timeout: 1 })
     })
   })
 

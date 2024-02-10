@@ -75,20 +75,44 @@ export type PreparedCommandHook<
   TResult = ResultOf<TCommand>,
 > = PreparedRequestHook<TCommand, TArgs, TResult>
 
-export interface RequestOptions {
+export interface RequestOptions<
+  TRequest extends AbstractRequest<TArgs, TResult>,
+  TArgs = ArgsOf<TRequest>,
+  TResult = ResultOf<TRequest>,
+> extends ExecuteOptions<TRequest, TArgs, TResult> {
 }
 
-export type QueryOptions = RequestOptions
+export type QueryOptions<
+  TQuery extends AbstractQuery<TArgs, TResult>,
+  TArgs = ArgsOf<TQuery>,
+  TResult = ResultOf<TQuery>
+> = RequestOptions<TQuery, TArgs, TResult>
 
-export type CommandOptions = RequestOptions
+export type CommandOptions<
+  TCommand extends AbstractCommand<TArgs, TResult>,
+  TArgs = ArgsOf<TCommand>,
+  TResult = ResultOf<TCommand>
+> = RequestOptions<TCommand, TArgs, TResult>
 
-interface PreparedRequestOptions {
-  immediate?: boolean
+interface PreparedRequestOptions<
+  TRequest extends AbstractRequest<TArgs, TResult>,
+  TArgs = ArgsOf<TRequest>,
+  TResult = ResultOf<TRequest>
+> extends RequestOptions<TRequest> {
+  readonly immediate?: boolean
 }
 
-export type PreparedQueryOptions = RequestOptions
+export type PreparedQueryOptions<
+  TQuery extends AbstractQuery<TArgs, TResult>,
+  TArgs = ArgsOf<TQuery>,
+  TResult = ResultOf<TQuery>
+> = PreparedRequestOptions<TQuery, TArgs, TResult>
 
-export type PreparedCommandOptions = RequestOptions
+export type PreparedCommandOptions<
+  TCommand extends AbstractCommand<TArgs, TResult>,
+  TArgs = ArgsOf<TCommand>,
+  TResult = ResultOf<TCommand>
+> = PreparedRequestOptions<TCommand, TArgs, TResult>
 
 export interface ExecuteOptions<
   TRequest extends AbstractRequest<TArgs, TResult>,
@@ -114,21 +138,27 @@ export function useRequest<
   TResult = ResultOf<TRequest>,
 >(
   requestClass: ClassOf<TRequest>,
-  options?: RequestOptions
+  options?: RequestOptions<TRequest, TArgs, TResult>
 ): RequestHook<TRequest> {
   const mediator = useMediator()
 
   const [state, setState] = useState<State<TRequest>>(makePending())
 
-  const execute = useCallback(async (args: TArgs, options?: ExecuteOptions<TRequest>) => {
+  const execute = useCallback(async (args: TArgs, executeOptions?: ExecuteOptions<TRequest>) => {
+
     await runLifeCycleHook(options?.preInProgress, args)
+    await runLifeCycleHook(executeOptions?.preInProgress, args)
     setState(makeInProgress(args))
+    await runLifeCycleHook(executeOptions?.postInProgress, args)
     await runLifeCycleHook(options?.postInProgress, args)
 
     try {
       const result: TResult = await mediator.send(requestClass, args)
+
       await runLifeCycleHook(options?.preSuccess, result, args)
+      await runLifeCycleHook(executeOptions?.preSuccess, result, args)
       setState(makeSuccessful(args, result))
+      await runLifeCycleHook(executeOptions?.postSuccess, result, args)
       await runLifeCycleHook(options?.postSuccess, result, args)
     } catch (e) {
       let error: Error
@@ -139,7 +169,9 @@ export function useRequest<
       }
 
       await runLifeCycleHook(options?.preFailure, error, args)
+      await runLifeCycleHook(executeOptions?.preFailure, error, args)
       setState(makeFailed(args, error))
+      await runLifeCycleHook(executeOptions?.postFailure, error, args)
       await runLifeCycleHook(options?.postFailure, error, args)
     }
   }, [requestClass, mediator, setState])
@@ -164,7 +196,7 @@ export function useQuery<
   TResult = ResultOf<TQuery>,
 >(
   queryClass: ClassOf<TQuery>,
-  options?: QueryOptions,
+  options?: QueryOptions<TQuery, TArgs, TResult>,
 ): QueryHook<TQuery> {
   return useRequest(queryClass, options)
 }
@@ -178,7 +210,7 @@ export function useCommand<
   TResult = ResultOf<TCommand>,
 >(
   commandClass: ClassOf<TCommand>,
-  options?: CommandOptions,
+  options?: CommandOptions<TCommand, TArgs, TResult>,
 ): CommandHook<TCommand> {
   return useRequest(commandClass, options)
 }
@@ -198,14 +230,14 @@ export function usePreparedRequest<
 >(
   requestClass: ClassOf<TRequest>,
   args: ArgsOf<TRequest>,
-  options?: PreparedRequestOptions,
+  options?: PreparedRequestOptions<TRequest, TArgs, TResult>,
 ): PreparedRequestHook<TRequest> {
-  const original = useRequest(requestClass)
+  const original = useRequest(requestClass, options)
 
   const memoizedArgs = useDeepEqualMemo(() => args, [args])
 
-  const execute = useCallback((options?: ExecuteOptions<TRequest>) => {
-    original.execute(memoizedArgs, options)
+  const execute = useCallback((executeOptions?: ExecuteOptions<TRequest>) => {
+    original.execute(memoizedArgs, executeOptions)
   }, [original.execute, memoizedArgs])
 
   useEffect(() => {
@@ -231,7 +263,7 @@ export function usePreparedQuery<
 >(
   queryClass: ClassOf<TQuery>,
   args: ArgsOf<TQuery>,
-  options?: PreparedQueryOptions,
+  options?: PreparedQueryOptions<TQuery, TArgs, TResult>,
 ): PreparedQueryHook<TQuery> {
   return usePreparedRequest(queryClass, args, options)
 }
@@ -246,7 +278,7 @@ export function usePreparedCommand<
 >(
   commandClass: ClassOf<TCommand>,
   args: ArgsOf<TCommand>,
-  options?: PreparedCommandOptions,
+  options?: PreparedCommandOptions<TCommand, TArgs, TResult>,
 ): PreparedCommandHook<TCommand> {
   return usePreparedRequest(commandClass, args, options)
 }
