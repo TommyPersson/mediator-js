@@ -9,8 +9,12 @@
         "@tommypersson/mediator-core",
         "@tommypersson/mediator-react"
       ],
-      "dependencyTypes": ["!local"],
+      "dependencyTypes": [
+        "!local"
+      ],
       "pinVersion": "workspace:*"
     }
-  ]
+  ],
+  "lintSemverRanges": false,
+  "lintFormatting": false
 }
