@@ -1,12 +1,9 @@
-import { v4 as uuid } from "uuid"
-
 const ResultType: unique symbol = Symbol("ResultType")
 
 export abstract class AbstractRequest<TArgs, TResult> {
 
   constructor(
-    readonly args: TArgs,
-    readonly instanceId: string = uuid(),
+    readonly args: TArgs
   ) {
   }
 
