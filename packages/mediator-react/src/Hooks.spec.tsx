@@ -46,14 +46,20 @@ describe("useRequest", async () => {
 
   function TestComponent() {
 
+    const preInProgress = useCallback((args: ArgsOf<TestCommand>): void => { logs.push(`preInProgress0: ${args.input}`) }, [])
+    const postInProgress = useCallback((args: ArgsOf<TestCommand>): void => { logs.push(`postInProgress0: ${args.input}`) }, [])
+    const preSuccess = useCallback((result: ResultOf<TestCommand>, args: ArgsOf<TestCommand>): void => { logs.push(`preSuccess0: ${args.input} ${result}`) }, [])
+    const postSuccess = useCallback((result: ResultOf<TestCommand>, args: ArgsOf<TestCommand>): void => { logs.push(`postSuccess0: ${args.input} ${result}`) }, [])
+    const preFailure = useCallback((error: Error, args: ArgsOf<TestCommand>): void => { logs.push(`preFailure0: ${args.input} ${error.message}`) }, [])
+    const postFailure = useCallback((error: Error, args: ArgsOf<TestCommand>): void => { logs.push(`postFailure0: ${args.input} ${error.message}`) }, [])
 
     const request = useRequest(TestCommand, {
-      preInProgress: (args: ArgsOf<TestCommand>): void => { logs.push(`preInProgress0: ${args.input}`) },
-      postInProgress: (args: ArgsOf<TestCommand>): void => { logs.push(`postInProgress0: ${args.input}`) },
-      preSuccess: (result: ResultOf<TestCommand>, args: ArgsOf<TestCommand>): void => { logs.push(`preSuccess0: ${args.input} ${result}`) },
-      postSuccess: (result: ResultOf<TestCommand>, args: ArgsOf<TestCommand>): void => { logs.push(`postSuccess0: ${args.input} ${result}`) },
-      preFailure: (error: Error, args: ArgsOf<TestCommand>): void => { logs.push(`preFailure0: ${args.input} ${error.message}`) },
-      postFailure: (error: Error, args: ArgsOf<TestCommand>): void => { logs.push(`postFailure0: ${args.input} ${error.message}`) },
+      preInProgress: preInProgress,
+      postInProgress: postInProgress,
+      preSuccess: preSuccess,
+      postSuccess: postSuccess,
+      preFailure: preFailure,
+      postFailure: postFailure,
     })
 
     const handleClick = useCallback(() => {

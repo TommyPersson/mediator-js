@@ -142,24 +142,25 @@ export function useRequest<
 ): RequestHook<TRequest> {
   const mediator = useMediator()
 
+  const requestOptions = useDeepEqualMemo(() => options, [options])
   const [state, setState] = useState<State<TRequest>>(makePending())
 
   const execute = useCallback(async (args: TArgs, executeOptions?: ExecuteOptions<TRequest>) => {
 
-    await runLifeCycleHook(options?.preInProgress, args)
+    await runLifeCycleHook(requestOptions?.preInProgress, args)
     await runLifeCycleHook(executeOptions?.preInProgress, args)
     setState(makeInProgress(args))
     await runLifeCycleHook(executeOptions?.postInProgress, args)
-    await runLifeCycleHook(options?.postInProgress, args)
+    await runLifeCycleHook(requestOptions?.postInProgress, args)
 
     try {
       const result: TResult = await mediator.send(requestClass, args)
 
-      await runLifeCycleHook(options?.preSuccess, result, args)
+      await runLifeCycleHook(requestOptions?.preSuccess, result, args)
       await runLifeCycleHook(executeOptions?.preSuccess, result, args)
       setState(makeSuccessful(args, result))
       await runLifeCycleHook(executeOptions?.postSuccess, result, args)
-      await runLifeCycleHook(options?.postSuccess, result, args)
+      await runLifeCycleHook(requestOptions?.postSuccess, result, args)
     } catch (e) {
       let error: Error
       if (e instanceof Error) {
@@ -168,13 +169,13 @@ export function useRequest<
         error = new Error(`Error during mediator request: ${e}`, { cause: e })
       }
 
-      await runLifeCycleHook(options?.preFailure, error, args)
+      await runLifeCycleHook(requestOptions?.preFailure, error, args)
       await runLifeCycleHook(executeOptions?.preFailure, error, args)
       setState(makeFailed(args, error))
       await runLifeCycleHook(executeOptions?.postFailure, error, args)
-      await runLifeCycleHook(options?.postFailure, error, args)
+      await runLifeCycleHook(requestOptions?.postFailure, error, args)
     }
-  }, [requestClass, mediator, setState])
+  }, [requestClass, mediator, setState, requestOptions])
 
   const reset = useCallback(() => {
     setState(makePending())
