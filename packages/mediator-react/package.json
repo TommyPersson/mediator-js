@@ -27,17 +27,17 @@
     "dequal": "2.0.3"
   },
   "devDependencies": {
-    "@testing-library/dom": "9.3.3",
-    "@testing-library/react": "14.1.2",
-    "@testing-library/user-event": "14.5.1",
+    "@testing-library/dom": "9.3.4",
+    "@testing-library/react": "14.2.1",
+    "@testing-library/user-event": "14.5.2",
     "@tommypersson/mediator-core": "workspace:*",
     "@types/jest": "29.5.12",
-    "@types/react": "18.2.58",
+    "@types/react": "18.2.63",
     "jest": "29.7.0",
     "jsdom": "24.0.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "ts-jest": "29.1.1",
+    "ts-jest": "29.1.2",
     "typescript": "5.3.3",
     "vitest": "1.3.1"
   },
