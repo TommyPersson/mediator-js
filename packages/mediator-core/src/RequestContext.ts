@@ -3,8 +3,8 @@ export class RequestContextKey<T> {
   }
 }
 
-export interface IRequestContext {
-  clone(): IRequestContext
+export interface RequestContext {
+  clone(): RequestContext
 
   get<T>(key: RequestContextKey<T>): T
 
@@ -13,7 +13,7 @@ export interface IRequestContext {
   has<T>(key: RequestContextKey<T>): boolean
 }
 
-export class RequestContext implements IRequestContext {
+export class DefaultRequestContext implements RequestContext {
   private readonly map: Map<string, any>
 
   private constructor(
@@ -22,12 +22,12 @@ export class RequestContext implements IRequestContext {
     this.map = new Map<string, any>(map)
   }
 
-  static empty(): IRequestContext {
-    return new RequestContext()
+  static empty(): RequestContext {
+    return new DefaultRequestContext()
   }
 
-  clone(): IRequestContext {
-    return new RequestContext(this.map)
+  clone(): RequestContext {
+    return new DefaultRequestContext(this.map)
   }
 
   get<T>(key: RequestContextKey<T>): T {

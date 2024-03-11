@@ -1,4 +1,4 @@
-import { AbstractRequest, ArgsOf, ResultOf } from "@tommypersson/mediator-core";
+import { Request, ArgsOf, ResultOf } from "@tommypersson/mediator-core";
 
 export enum StateKind {
   Pending = "pending",
@@ -8,7 +8,7 @@ export enum StateKind {
 }
 
 export interface Pending<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>,
 > {
@@ -20,7 +20,7 @@ export interface Pending<
 }
 
 export interface InProgress<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>,
 > {
@@ -32,7 +32,7 @@ export interface InProgress<
 }
 
 export interface Successful<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>,
 > {
@@ -44,7 +44,7 @@ export interface Successful<
 }
 
 export interface Failed<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>,
 > {
@@ -56,13 +56,13 @@ export interface Failed<
 }
 
 export type State<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>
 > = Pending<TRequest> | InProgress<TRequest> | Successful<TRequest> | Failed<TRequest>
 
 export function makePending<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>,
 >(): Pending<TRequest> {
@@ -70,7 +70,7 @@ export function makePending<
 }
 
 export function makeInProgress<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>,
 >(args: ArgsOf<TRequest>): InProgress<TRequest> {
@@ -78,7 +78,7 @@ export function makeInProgress<
 }
 
 export function makeSuccessful<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>,
 >(args: ArgsOf<TRequest>, result: ResultOf<TRequest>): Successful<TRequest> {
@@ -86,7 +86,7 @@ export function makeSuccessful<
 }
 
 export function makeFailed<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>,
 >(args: ArgsOf<TRequest>, error: Error): Failed<TRequest> {

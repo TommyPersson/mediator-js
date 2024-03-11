@@ -1,59 +1,59 @@
 import {
-  IMiddlewareProvider,
-  IRequestHandlerProvider,
-  MediatorRegistry,
+  MiddlewareProvider,
+  RequestHandlerProvider,
+  GlobalMediatorRegistry,
   NullMiddlewareProvider,
   NullRequestHandlerProvider
 } from "./MediatorRegistry.js"
-import { IRequestContext, RequestContext } from "./RequestContext.js"
-import { AbstractRequest, ArgsOf, ClassOf, ResultOf } from "./Requests.js"
+import { RequestContext, DefaultRequestContext } from "./RequestContext.js"
+import { Request, ArgsOf, ClassOf, ResultOf } from "./Requests.js"
 
-export interface IMediator {
+export interface Mediator {
   send<
-    TRequest extends AbstractRequest<TArgs, TResult>,
+    TRequest extends Request<TArgs, TResult>,
     TArgs = ArgsOf<TRequest>,
     TResult = ResultOf<TRequest>
   >(request: TRequest): Promise<TResult>
 
   send<
-    TRequest extends AbstractRequest<TArgs, TResult>,
+    TRequest extends Request<TArgs, TResult>,
     TArgs = ArgsOf<TRequest>,
     TResult = ResultOf<TRequest>
   >(requestType: ClassOf<TRequest>, args: ArgsOf<TRequest>): Promise<TResult>
 }
 
 export interface MediatorConfig {
-  readonly handlerProvider?: IRequestHandlerProvider
-  readonly middlewareProvider?: IMiddlewareProvider
-  readonly baseContext?: IRequestContext
+  readonly handlerProvider?: RequestHandlerProvider
+  readonly middlewareProvider?: MiddlewareProvider
+  readonly baseContext?: RequestContext
 }
 
-export class Mediator implements IMediator {
+export class DefaultMediator implements Mediator {
 
-  private readonly handlerProvider: IRequestHandlerProvider = MediatorRegistry
-  private readonly middlewareProvider: IMiddlewareProvider = MediatorRegistry
-  private readonly baseContext: IRequestContext = RequestContext.empty()
+  private readonly handlerProvider: RequestHandlerProvider = GlobalMediatorRegistry
+  private readonly middlewareProvider: MiddlewareProvider = GlobalMediatorRegistry
+  private readonly baseContext: RequestContext = DefaultRequestContext.empty()
 
   constructor(config?: MediatorConfig) {
-    this.handlerProvider = config?.handlerProvider ?? MediatorRegistry
-    this.middlewareProvider = config?.middlewareProvider ?? MediatorRegistry
-    this.baseContext = config?.baseContext ?? RequestContext.empty()
+    this.handlerProvider = config?.handlerProvider ?? GlobalMediatorRegistry
+    this.middlewareProvider = config?.middlewareProvider ?? GlobalMediatorRegistry
+    this.baseContext = config?.baseContext ?? DefaultRequestContext.empty()
   }
 
   send<
-    TRequest extends AbstractRequest<TArgs, TResult>,
+    TRequest extends Request<TArgs, TResult>,
     TArgs = ArgsOf<TRequest>,
     TResult = ResultOf<TRequest>
   >(request: TRequest): Promise<TResult>
 
   send<
-    TRequest extends AbstractRequest<TArgs, TResult>,
+    TRequest extends Request<TArgs, TResult>,
     TArgs = ArgsOf<TRequest>,
     TResult = ResultOf<TRequest>
   >(requestType: ClassOf<TRequest>, args: ArgsOf<TRequest>): Promise<TResult>
 
   async send<
-    TRequest extends AbstractRequest<TArgs, TResult>,
+    TRequest extends Request<TArgs, TResult>,
     TArgs = ArgsOf<TRequest>,
     TResult = ResultOf<TRequest>
   >(arg1: ClassOf<TRequest> | TRequest, arg2?: ArgsOf<TRequest>): Promise<TResult> {
@@ -67,7 +67,7 @@ export class Mediator implements IMediator {
     throw new Error("Invalid arguments")
   }
 
-  private async handle1<TArgs, TResult>(request: AbstractRequest<TArgs, TResult>): Promise<TResult> {
+  private async handle1<TArgs, TResult>(request: Request<TArgs, TResult>): Promise<TResult> {
     const handler = this.handlerProvider.getHandlerFor((request as any).constructor)
     if (!handler) {
       throw new Error(`No handler found for '${(request as any).constructor}'`)
@@ -75,7 +75,7 @@ export class Mediator implements IMediator {
 
     const middleware = [...this.middlewareProvider.middlewares].sort((a, b) => b.priority - a.priority)
 
-    const handlerFn = (request: AbstractRequest<TArgs, TResult>, context: IRequestContext) => handler.handle(request, context)
+    const handlerFn = (request: Request<TArgs, TResult>, context: RequestContext) => handler.handle(request, context)
     const chain = middleware.reduce(
       (acc, curr) => (request, context) => curr.handle(request, context, acc),
       handlerFn,
@@ -90,7 +90,7 @@ export class Mediator implements IMediator {
     return result
   }
 
-  private async handle2<TRequest extends AbstractRequest<TArgs, TResult>, TArgs, TResult>(
+  private async handle2<TRequest extends Request<TArgs, TResult>, TArgs, TResult>(
     requestType: ClassOf<TRequest>,
     args: TArgs,
   ): Promise<TResult> {
@@ -100,7 +100,7 @@ export class Mediator implements IMediator {
   }
 }
 
-export const NullMediator = new Mediator({
+export const NullMediator = new DefaultMediator({
   handlerProvider: NullRequestHandlerProvider,
   middlewareProvider: NullMiddlewareProvider,
 })

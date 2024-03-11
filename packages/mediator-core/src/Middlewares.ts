@@ -1,16 +1,16 @@
-import { IRequestContext } from "./RequestContext.js"
-import { AbstractRequest, ResultOf } from "./Requests.js"
+import { RequestContext } from "./RequestContext.js"
+import { Request, ResultOf } from "./Requests.js"
 
-export interface IMiddleware {
+export interface Middleware {
   priority: number
 
   handle<
-    TRequest extends AbstractRequest<any, TResult>,
+    TRequest extends Request<any, TResult>,
     TResult = ResultOf<TRequest>
   >(
     request: TRequest,
-    context: IRequestContext,
-    next: (request: TRequest, context: IRequestContext) => Promise<TResult>,
+    context: RequestContext,
+    next: (request: TRequest, context: RequestContext) => Promise<TResult>,
   ): Promise<TResult>
 }
 

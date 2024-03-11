@@ -1,17 +1,17 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import {
-  AbstractCommand,
-  AbstractQuery,
-  AbstractRequest,
-  ICommandHandler,
-  IMiddleware,
-  IQueryHandler,
-  IRequestContext,
+  Command,
+  Query,
+  Request,
+  CommandHandler,
+  Middleware,
+  QueryHandler,
+  RequestContext,
   RequestContextKey,
   ResultOf,
 } from "./index"
-import { Mediator } from "./Mediator"
-import { MediatorRegistry } from "./MediatorRegistry"
+import { DefaultMediator } from "./Mediator"
+import { GlobalMediatorRegistry } from "./MediatorRegistry"
 
 const SuffixKey = new RequestContextKey<string>("SuffixKey")
 const TestMiddleware1AppliedKey = new RequestContextKey<boolean>("TestMiddleware1AppliedKey")
@@ -20,30 +20,30 @@ describe("Mediator", async () => {
 
   let outputs: { [index: string]: any } = {}
 
-  class TestQuery extends AbstractQuery<{ greetee: string }, string> {
+  class TestQuery extends Query<{ greetee: string }, string> {
   }
 
-  class TestQueryHandler implements IQueryHandler<TestQuery> {
-    async handle(query: TestQuery, context: IRequestContext): Promise<ResultOf<TestQuery>> {
+  class TestQueryHandler implements QueryHandler<TestQuery> {
+    async handle(query: TestQuery, context: RequestContext): Promise<ResultOf<TestQuery>> {
       outputs["middleware-1-applied"] = context.get(TestMiddleware1AppliedKey)
       return `Hello, ${query.args.greetee}!${context.get(SuffixKey) ?? ""}`
     }
   }
 
-  class TestCommand extends AbstractCommand<{ greetee: string }, string> {
+  class TestCommand extends Command<{ greetee: string }, string> {
   }
 
-  class TestCommandHandler implements ICommandHandler<TestCommand> {
-    async handle(command: TestCommand, context: IRequestContext): Promise<ResultOf<TestCommand>> {
+  class TestCommandHandler implements CommandHandler<TestCommand> {
+    async handle(command: TestCommand, context: RequestContext): Promise<ResultOf<TestCommand>> {
       outputs["middleware-1-applied"] = context.get(TestMiddleware1AppliedKey)
       return `Hello, ${command.args.greetee}!${context.get(SuffixKey) ?? ""}`
     }
   }
 
-  const mediator = new Mediator()
+  const mediator = new DefaultMediator()
 
-  MediatorRegistry.addHandler(TestQuery, () => new TestQueryHandler())
-  MediatorRegistry.addHandler(TestCommand, () => new TestCommandHandler())
+  GlobalMediatorRegistry.addHandler(TestQuery, () => new TestQueryHandler())
+  GlobalMediatorRegistry.addHandler(TestCommand, () => new TestCommandHandler())
 
   beforeEach(() => {
     outputs = {}
@@ -72,13 +72,13 @@ describe("Mediator", async () => {
     })
   })
 
-  class TestMiddleware1 implements IMiddleware {
+  class TestMiddleware1 implements Middleware {
     priority: number = 1
 
-    handle<TRequest extends AbstractRequest<any, TResult>, TResult = any>(
+    handle<TRequest extends Request<any, TResult>, TResult = any>(
       request: TRequest,
-      context: IRequestContext,
-      next: (request: TRequest, context: IRequestContext) => Promise<TResult>
+      context: RequestContext,
+      next: (request: TRequest, context: RequestContext) => Promise<TResult>
     ): Promise<TResult> {
       outputs["middleware-application-order"].push(this.priority)
       context.put(TestMiddleware1AppliedKey, true)
@@ -87,16 +87,16 @@ describe("Mediator", async () => {
   }
 
 
-  class TestMiddleware2 implements IMiddleware {
+  class TestMiddleware2 implements Middleware {
     priority: number = 2
 
     handle<
-      TRequest extends AbstractRequest<any, TResult>,
+      TRequest extends Request<any, TResult>,
       TResult = ResultOf<TRequest>
     >(
       request: TRequest,
-      context: IRequestContext,
-      next: (request: TRequest, context: IRequestContext) => Promise<TResult>
+      context: RequestContext,
+      next: (request: TRequest, context: RequestContext) => Promise<TResult>
     ): Promise<TResult> {
       outputs["middleware-application-order"].push(this.priority)
       return next(request, context)
@@ -104,20 +104,20 @@ describe("Mediator", async () => {
 
   }
 
-  class TestMiddleware3 implements IMiddleware {
+  class TestMiddleware3 implements Middleware {
     priority: number = 3
 
-    handle<TRequest extends AbstractRequest<any, TResult>, TResult = any>(
+    handle<TRequest extends Request<any, TResult>, TResult = any>(
       request: TRequest,
-      context: IRequestContext,
-      next: (request: TRequest, context: IRequestContext) => Promise<TResult>
+      context: RequestContext,
+      next: (request: TRequest, context: RequestContext) => Promise<TResult>
     ): Promise<TResult> {
       outputs["middleware-application-order"].push(this.priority)
       return next(request, context)
     }
   }
 
-  MediatorRegistry.addMiddleware(
+  GlobalMediatorRegistry.addMiddleware(
     new TestMiddleware3(), // reverse ordering to test for priority sorting
     new TestMiddleware2(),
     new TestMiddleware1(),

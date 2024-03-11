@@ -1,10 +1,9 @@
 import {
-  AbstractCommand,
   ArgsOf,
-  ICommandHandler,
-  IRequestContext,
-  Mediator,
-  MediatorRegistry,
+  Command,
+  CommandHandler, DefaultMediator,
+  GlobalMediatorRegistry,
+  RequestContext,
   ResultOf,
 } from "@tommypersson/mediator-core"
 import * as React from "react"
@@ -19,17 +18,17 @@ import { Deferred } from "./utils"
 
 let latch = new Deferred<void>()
 
-class TestCommand extends AbstractCommand<{ input: number }, number> {
+class TestCommand extends Command<{ input: number }, number> {
 }
 
-class TestCommandHandler implements ICommandHandler<TestCommand> {
-  async handle(command: TestCommand, context: IRequestContext): Promise<number> {
+class TestCommandHandler implements CommandHandler<TestCommand> {
+  async handle(command: TestCommand, context: RequestContext): Promise<number> {
     await latch
     return command.args.input + 1
   }
 }
 
-MediatorRegistry.addHandler(TestCommand, () => new TestCommandHandler())
+GlobalMediatorRegistry.addHandler(TestCommand, () => new TestCommandHandler())
 
 describe("useRequest", async () => {
 
@@ -108,7 +107,7 @@ describe("useRequest", async () => {
 
   function TestApp() {
     return (
-      <MediatorContext.Provider value={new Mediator()}>
+      <MediatorContext.Provider value={new DefaultMediator()}>
         <TestComponent/>
       </MediatorContext.Provider>
     )
@@ -286,7 +285,7 @@ describe("usePreparedRequest", async () => {
 
     function TestApp() {
       return (
-        <MediatorContext.Provider value={new Mediator()}>
+        <MediatorContext.Provider value={new DefaultMediator()}>
           <TestComponent input={1} immediate={false} />
         </MediatorContext.Provider>
       )
@@ -368,7 +367,7 @@ describe("usePreparedRequest", async () => {
 
     function TestApp(props: { input: number }) {
       return (
-        <MediatorContext.Provider value={new Mediator()}>
+        <MediatorContext.Provider value={new DefaultMediator()}>
           <TestComponent input={props.input} immediate={true} />
         </MediatorContext.Provider>
       )

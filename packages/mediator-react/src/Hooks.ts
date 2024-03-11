@@ -1,11 +1,11 @@
-import { AbstractCommand, AbstractQuery, AbstractRequest, ArgsOf, ClassOf, ResultOf } from "@tommypersson/mediator-core"
+import { Command, Query, Request, ArgsOf, ClassOf, ResultOf } from "@tommypersson/mediator-core"
 import { useCallback, useEffect, useState } from "react"
 import { useMediator } from "./MediatorContext"
 import { makeFailed, makeInProgress, makePending, makeSuccessful, State } from "./State"
 import { useDeepEqualMemo } from "./utils"
 
 export type CallbackOf<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>,
 > = (args: TArgs, options?: ExecuteOptions<TRequest>) => void
@@ -14,7 +14,7 @@ export type CallbackOf<
  * The result of {@link useRequest}.
  */
 export interface RequestHook<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>
 > {
@@ -28,7 +28,7 @@ export interface RequestHook<
  * The result of {@link useQuery}.
  */
 export type QueryHook<
-  TQuery extends AbstractQuery<TArgs, TResult>,
+  TQuery extends Query<TArgs, TResult>,
   TArgs = ArgsOf<TQuery>,
   TResult = ResultOf<TQuery>
 > = RequestHook<TQuery, TArgs, TResult>
@@ -37,7 +37,7 @@ export type QueryHook<
  * The result of {@link useCommand}.
  */
 export type CommandHook<
-  TCommand extends AbstractCommand<TArgs, TResult>,
+  TCommand extends Command<TArgs, TResult>,
   TArgs = ArgsOf<TCommand>,
   TResult = ResultOf<TCommand>
 > = RequestHook<TCommand, TArgs, TResult>
@@ -46,7 +46,7 @@ export type CommandHook<
  * The result of {@link usePreparedRequest}.
  */
 export interface PreparedRequestHook<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>
 > {
@@ -61,7 +61,7 @@ export interface PreparedRequestHook<
  * The result of {@link usePreparedQuery}.
  */
 export type PreparedQueryHook<
-  TQuery extends AbstractQuery<TArgs, TValue>,
+  TQuery extends Query<TArgs, TValue>,
   TArgs = ArgsOf<TQuery>,
   TValue = ResultOf<TQuery>
 > = PreparedRequestHook<TQuery, TArgs, TValue>
@@ -70,32 +70,32 @@ export type PreparedQueryHook<
  * The result of {@link usePreparedCommand}.
  */
 export type PreparedCommandHook<
-  TCommand extends AbstractCommand<TArgs, TResult>,
+  TCommand extends Command<TArgs, TResult>,
   TArgs = ArgsOf<TCommand>,
   TResult = ResultOf<TCommand>,
 > = PreparedRequestHook<TCommand, TArgs, TResult>
 
 export interface RequestOptions<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>,
 > extends ExecuteOptions<TRequest, TArgs, TResult> {
 }
 
 export type QueryOptions<
-  TQuery extends AbstractQuery<TArgs, TResult>,
+  TQuery extends Query<TArgs, TResult>,
   TArgs = ArgsOf<TQuery>,
   TResult = ResultOf<TQuery>
 > = RequestOptions<TQuery, TArgs, TResult>
 
 export type CommandOptions<
-  TCommand extends AbstractCommand<TArgs, TResult>,
+  TCommand extends Command<TArgs, TResult>,
   TArgs = ArgsOf<TCommand>,
   TResult = ResultOf<TCommand>
 > = RequestOptions<TCommand, TArgs, TResult>
 
 interface PreparedRequestOptions<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>
 > extends RequestOptions<TRequest> {
@@ -103,19 +103,19 @@ interface PreparedRequestOptions<
 }
 
 export type PreparedQueryOptions<
-  TQuery extends AbstractQuery<TArgs, TResult>,
+  TQuery extends Query<TArgs, TResult>,
   TArgs = ArgsOf<TQuery>,
   TResult = ResultOf<TQuery>
 > = PreparedRequestOptions<TQuery, TArgs, TResult>
 
 export type PreparedCommandOptions<
-  TCommand extends AbstractCommand<TArgs, TResult>,
+  TCommand extends Command<TArgs, TResult>,
   TArgs = ArgsOf<TCommand>,
   TResult = ResultOf<TCommand>
 > = PreparedRequestOptions<TCommand, TArgs, TResult>
 
 export interface ExecuteOptions<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>,
 > {
@@ -128,12 +128,12 @@ export interface ExecuteOptions<
 }
 
 /**
- * This hook takes a {@link AbstractRequest} and returns a {@link RequestHook}.
+ * This hook takes a {@link Request} and returns a {@link RequestHook}.
  *
  * Needs to be used inside a {@link MediatorContext.Provider}.
  */
 export function useRequest<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>,
 >(
@@ -192,7 +192,7 @@ export function useRequest<
  * Query alias for {@link useRequest}.
  */
 export function useQuery<
-  TQuery extends AbstractQuery<TArgs, TResult>,
+  TQuery extends Query<TArgs, TResult>,
   TArgs = ArgsOf<TQuery>,
   TResult = ResultOf<TQuery>,
 >(
@@ -206,7 +206,7 @@ export function useQuery<
  * Query alias for {@link useRequest}.
  */
 export function useCommand<
-  TCommand extends AbstractCommand<TArgs, TResult>,
+  TCommand extends Command<TArgs, TResult>,
   TArgs = ArgsOf<TCommand>,
   TResult = ResultOf<TCommand>,
 >(
@@ -225,7 +225,7 @@ export function useCommand<
  * `args` changes. Deep equality is used to determine if `args` has changed between renders.
  */
 export function usePreparedRequest<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>,
 >(
@@ -258,7 +258,7 @@ export function usePreparedRequest<
  * Query alias for {@link usePreparedRequest}.
  */
 export function usePreparedQuery<
-  TQuery extends AbstractQuery<TArgs, TResult>,
+  TQuery extends Query<TArgs, TResult>,
   TArgs = ArgsOf<TQuery>,
   TResult = ResultOf<TQuery>,
 >(
@@ -273,7 +273,7 @@ export function usePreparedQuery<
  * Command alias for {@link usePreparedRequest}.
  */
 export function usePreparedCommand<
-  TCommand extends AbstractCommand<TArgs, TResult>,
+  TCommand extends Command<TArgs, TResult>,
   TArgs = ArgsOf<TCommand>,
   TResult = ResultOf<TCommand>,
 >(

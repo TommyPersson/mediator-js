@@ -1,6 +1,6 @@
 const ResultType: unique symbol = Symbol("ResultType")
 
-export abstract class AbstractRequest<TArgs, TResult> {
+export abstract class Request<TArgs, TResult> {
 
   constructor(
     readonly args: TArgs
@@ -10,26 +10,26 @@ export abstract class AbstractRequest<TArgs, TResult> {
   readonly [ResultType]: TResult = undefined!
 }
 
-export abstract class AbstractCommand<TArgs, TResult> extends AbstractRequest<TArgs, TResult> {
+export abstract class Command<TArgs, TResult> extends Request<TArgs, TResult> {
 }
 
-export abstract class AbstractQuery<TArgs, TResult> extends AbstractRequest<TArgs, TResult> {
+export abstract class Query<TArgs, TResult> extends Request<TArgs, TResult> {
 }
 
 export type ArgsOf<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = TRequest["args"],
   TResult = TRequest[typeof ResultType],
 > = TArgs
 
 export type ResultOf<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = TRequest["args"],
   TResult = TRequest[typeof ResultType],
 > = TResult
 
 export type ClassOf<
-  TRequest extends AbstractRequest<TArgs, TResult>,
+  TRequest extends Request<TArgs, TResult>,
   TArgs = TRequest["args"],
   TResult = TRequest[typeof ResultType],
 > = { new(args: TArgs): TRequest }
