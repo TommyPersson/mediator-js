@@ -1,13 +1,14 @@
 import {
   ArgsOf,
   Command,
-  CommandHandler, DefaultMediator,
+  CommandHandler,
+  DefaultMediator,
   GlobalMediatorRegistry,
   RequestContext,
   ResultOf,
 } from "@tommypersson/mediator-core"
 import * as React from "react"
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
 import { beforeEach, describe, expect, it } from "vitest"
 import { usePreparedRequest, useRequest } from "./Hooks"
 import { MediatorContext } from "./MediatorContext"
@@ -45,34 +46,36 @@ describe("useRequest", async () => {
 
   function TestComponent() {
 
-    const preInProgress = useCallback((args: ArgsOf<TestCommand>): void => { logs.push(`preInProgress0: ${args.input}`) }, [])
-    const postInProgress = useCallback((args: ArgsOf<TestCommand>): void => { logs.push(`postInProgress0: ${args.input}`) }, [])
-    const preSuccess = useCallback((result: ResultOf<TestCommand>, args: ArgsOf<TestCommand>): void => { logs.push(`preSuccess0: ${args.input} ${result}`) }, [])
-    const postSuccess = useCallback((result: ResultOf<TestCommand>, args: ArgsOf<TestCommand>): void => { logs.push(`postSuccess0: ${args.input} ${result}`) }, [])
-    const preFailure = useCallback((error: Error, args: ArgsOf<TestCommand>): void => { logs.push(`preFailure0: ${args.input} ${error.message}`) }, [])
-    const postFailure = useCallback((error: Error, args: ArgsOf<TestCommand>): void => { logs.push(`postFailure0: ${args.input} ${error.message}`) }, [])
+    const requestOptions = useMemo(() => ({
+      preInProgress: (args: ArgsOf<TestCommand>): void => { logs.push(`preInProgress0: ${args.input}`) },
+      postInProgress: (args: ArgsOf<TestCommand>): void => { logs.push(`postInProgress0: ${args.input}`) },
+      preSuccess: (result: ResultOf<TestCommand>, args: ArgsOf<TestCommand>): void => { logs.push(`preSuccess0: ${args.input} ${result}`) },
+      postSuccess: (result: ResultOf<TestCommand>, args: ArgsOf<TestCommand>): void => { logs.push(`postSuccess0: ${args.input} ${result}`) },
+      preFailure: (error: Error, args: ArgsOf<TestCommand>): void => { logs.push(`preFailure0: ${args.input} ${error.message}`) },
+      postFailure: (error: Error, args: ArgsOf<TestCommand>): void => { logs.push(`postFailure0: ${args.input} ${error.message}`) },
+    }), []);
 
-    const request = useRequest(TestCommand, {
-      preInProgress: preInProgress,
-      postInProgress: postInProgress,
-      preSuccess: preSuccess,
-      postSuccess: postSuccess,
-      preFailure: preFailure,
-      postFailure: postFailure,
-    })
+    const request = useRequest(TestCommand, requestOptions)
+
+    const executeOptions = {
+      preInProgress: (args: ArgsOf<TestCommand>): void => { logs.push(`preInProgress: ${args.input}`) },
+      postInProgress: (args: ArgsOf<TestCommand>): void => { logs.push(`postInProgress: ${args.input}`) },
+      preSuccess: (result: ResultOf<TestCommand>, args: ArgsOf<TestCommand>): void => { logs.push(`preSuccess: ${args.input} ${result}`) },
+      postSuccess: (result: ResultOf<TestCommand>, args: ArgsOf<TestCommand>): void => { logs.push(`postSuccess: ${args.input} ${result}`) },
+      preFailure: (error: Error, args: ArgsOf<TestCommand>): void => { logs.push(`preFailure: ${args.input} ${error.message}`) },
+      postFailure: (error: Error, args: ArgsOf<TestCommand>): void => { logs.push(`postFailure: ${args.input} ${error.message}`) },
+    }
 
     const handleClick = useCallback(() => {
       request.execute(
         { input: 1 },
-        {
-          preInProgress: (args: ArgsOf<TestCommand>): void => { logs.push(`preInProgress: ${args.input}`) },
-          postInProgress: (args: ArgsOf<TestCommand>): void => { logs.push(`postInProgress: ${args.input}`) },
-          preSuccess: (result: ResultOf<TestCommand>, args: ArgsOf<TestCommand>): void => { logs.push(`preSuccess: ${args.input} ${result}`) },
-          postSuccess: (result: ResultOf<TestCommand>, args: ArgsOf<TestCommand>): void => { logs.push(`postSuccess: ${args.input} ${result}`) },
-          preFailure: (error: Error, args: ArgsOf<TestCommand>): void => { logs.push(`preFailure: ${args.input} ${error.message}`) },
-          postFailure: (error: Error, args: ArgsOf<TestCommand>): void => { logs.push(`postFailure: ${args.input} ${error.message}`) },
-        }
+        executeOptions
       )
+    }, [request.execute])
+
+    const handleClickAsync = useCallback(async () => {
+      await request.executeAsync({ input: 1 }, executeOptions)
+      logs.push("postAwait")
     }, [request.execute])
 
     const state = request.state;
@@ -100,6 +103,7 @@ describe("useRequest", async () => {
         <span>state: {state.kind}</span>
         {content}
         <button onClick={handleClick}>button</button>
+        <button onClick={handleClickAsync}>buttonAsync</button>
         <button onClick={request.reset}>reset</button>
       </div>
     )
@@ -234,14 +238,36 @@ describe("useRequest", async () => {
       "postFailure0: 1 mistake",
     ])
   })
+
+  it("Can use promise returned by 'executeAsync'", async () => {
+    render(<TestApp/>)
+
+    await userEvent.click(screen.getByText("buttonAsync"))
+
+    latch.resolve()
+
+    await waitFor(async () => {
+      expect(screen.getByText(`state: ${StateKind.Successful}`)).toBeDefined()
+    })
+
+    expect(logs[logs.length-1]).toBe("postAwait")
+  })
 })
 
 describe("usePreparedRequest", async () => {
 
+  let logs: string[] = []
+
   function TestComponent(props: { immediate: boolean, input: number }) {
     const request = usePreparedRequest(TestCommand, { input: props.input }, { immediate: props.immediate })
 
-    const state = request.state;
+    const onClick = useCallback(() => request.execute(), [request.execute])
+    const onClickAsync = useCallback(async () => {
+      await request.executeAsync()
+      logs.push("postAwait")
+    }, [request.executeAsync])
+
+    const state = request.state
 
     const content = state.kind === StateKind.Pending ? (
       <>
@@ -267,7 +293,8 @@ describe("usePreparedRequest", async () => {
       <div>
         <span>state: {state.kind}</span>
         {content}
-        <button onClick={request.execute}>button</button>
+        <button onClick={onClick}>button</button>
+        <button onClick={onClickAsync}>buttonAsync</button>
         <button onClick={request.reset}>reset</button>
       </div>
     )
@@ -276,6 +303,7 @@ describe("usePreparedRequest", async () => {
   describe("immediate = false", async () => {
 
     beforeEach(() => {
+      logs = []
       latch = new Deferred<void>()
       return () => {
         latch.resolve()
@@ -353,11 +381,27 @@ describe("usePreparedRequest", async () => {
          expect(screen.getByText(`state: ${StateKind.Pending}`)).toBeDefined()
       }, { timeout: 1 })
     })
+
+    it("Can use promise returned by 'executeAsync'", async () => {
+      render(<TestApp/>)
+
+      await userEvent.click(screen.getByText("buttonAsync"))
+
+      latch.resolve()
+
+      await waitFor(async () => {
+        expect(screen.getByText(`state: ${StateKind.Successful}`)).toBeDefined()
+        expect(screen.getByText("result: 2")).toBeDefined()
+      })
+
+      expect(logs[logs.length-1]).toBe("postAwait")
+    })
   })
 
   describe("immediate = true", async () => {
 
     beforeEach(() => {
+      logs = []
       latch = new Deferred<void>()
       return () => {
         latch.resolve()

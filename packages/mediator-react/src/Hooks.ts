@@ -10,6 +10,12 @@ export type CallbackOf<
   TResult = ResultOf<TRequest>,
 > = (args: TArgs, options?: ExecuteOptions<TRequest>) => void
 
+export type AsyncCallbackOf<
+  TRequest extends Request<TArgs, TResult>,
+  TArgs = ArgsOf<TRequest>,
+  TResult = ResultOf<TRequest>,
+> = (args: TArgs, options?: ExecuteOptions<TRequest>) => Promise<TResult>
+
 /**
  * The result of {@link useRequest}.
  */
@@ -19,6 +25,7 @@ export interface RequestHook<
   TResult = ResultOf<TRequest>
 > {
   readonly execute: CallbackOf<TRequest>
+  readonly executeAsync: AsyncCallbackOf<TRequest>
   readonly reset: () => void
 
   readonly state: State<TRequest>
@@ -50,7 +57,8 @@ export interface PreparedRequestHook<
   TArgs = ArgsOf<TRequest>,
   TResult = ResultOf<TRequest>
 > {
-  readonly execute: () => void
+  readonly execute: (options?: ExecuteOptions<TRequest>) => void
+  readonly executeAsync: (options?: ExecuteOptions<TRequest>) => Promise<TResult>
   readonly reset: () => void
 
   readonly state: State<TRequest>
@@ -145,7 +153,7 @@ export function useRequest<
   const requestOptions = useDeepEqualMemo(() => options, [options])
   const [state, setState] = useState<State<TRequest>>(makePending())
 
-  const execute = useCallback(async (args: TArgs, executeOptions?: ExecuteOptions<TRequest>) => {
+  const executeAsync = useCallback(async (args: TArgs, executeOptions?: ExecuteOptions<TRequest>): Promise<TResult> => {
 
     await runLifeCycleHook(requestOptions?.preInProgress, args)
     await runLifeCycleHook(executeOptions?.preInProgress, args)
@@ -161,6 +169,8 @@ export function useRequest<
       setState(makeSuccessful(args, result))
       await runLifeCycleHook(executeOptions?.postSuccess, result, args)
       await runLifeCycleHook(requestOptions?.postSuccess, result, args)
+
+      return result
     } catch (e) {
       let error: Error
       if (e instanceof Error) {
@@ -174,8 +184,14 @@ export function useRequest<
       setState(makeFailed(args, error))
       await runLifeCycleHook(executeOptions?.postFailure, error, args)
       await runLifeCycleHook(requestOptions?.postFailure, error, args)
+
+      throw e
     }
   }, [requestClass, mediator, setState, requestOptions])
+
+  const execute = useCallback((args: TArgs, executeOptions?: ExecuteOptions<TRequest>) => {
+      executeAsync(args, executeOptions).catch(() => null)
+  }, [executeAsync])
 
   const reset = useCallback(() => {
     setState(makePending())
@@ -183,6 +199,7 @@ export function useRequest<
 
   return {
     execute,
+    executeAsync,
     reset,
     state
   }
@@ -237,9 +254,13 @@ export function usePreparedRequest<
 
   const memoizedArgs = useDeepEqualMemo(() => args, [args])
 
-  const execute = useCallback((executeOptions?: ExecuteOptions<TRequest>) => {
-    original.execute(memoizedArgs, executeOptions)
-  }, [original.execute, memoizedArgs])
+  const executeAsync = useCallback(async (executeOptions?: ExecuteOptions<TRequest>): Promise<TResult> => {
+    return original.executeAsync(memoizedArgs, executeOptions)
+  }, [original.executeAsync, memoizedArgs])
+
+  const execute = useCallback((executeOptions?: ExecuteOptions<TRequest>): void => {
+    executeAsync(executeOptions).catch(() => null)
+  }, [executeAsync])
 
   useEffect(() => {
     if (options?.immediate) {
@@ -250,7 +271,8 @@ export function usePreparedRequest<
   return {
     ...original,
     preparedArgs: args,
-    execute
+    execute,
+    executeAsync
   }
 }
 
