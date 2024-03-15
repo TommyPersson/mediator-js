@@ -1,7 +1,7 @@
 import { Command, Query, Request, ArgsOf, ClassOf, ResultOf } from "@tommypersson/mediator-core"
 import { useCallback, useEffect, useState } from "react"
 import { useMediator } from "./MediatorContext"
-import { makeFailed, makeInProgress, makePending, makeSuccessful, State } from "./State"
+import { States, State } from "./State"
 import { useDeepEqualMemo } from "./utils"
 
 export type CallbackOf<
@@ -151,13 +151,13 @@ export function useRequest<
   const mediator = useMediator()
 
   const requestOptions = useDeepEqualMemo(() => options, [options])
-  const [state, setState] = useState<State<TRequest>>(makePending())
+  const [state, setState] = useState<State<TRequest>>(States.makePending())
 
   const executeAsync = useCallback(async (args: TArgs, executeOptions?: ExecuteOptions<TRequest>): Promise<TResult> => {
 
     await runLifeCycleHook(requestOptions?.preInProgress, args)
     await runLifeCycleHook(executeOptions?.preInProgress, args)
-    setState(makeInProgress(args))
+    setState(States.makeInProgress(args))
     await runLifeCycleHook(executeOptions?.postInProgress, args)
     await runLifeCycleHook(requestOptions?.postInProgress, args)
 
@@ -166,7 +166,7 @@ export function useRequest<
 
       await runLifeCycleHook(requestOptions?.preSuccess, result, args)
       await runLifeCycleHook(executeOptions?.preSuccess, result, args)
-      setState(makeSuccessful(args, result))
+      setState(States.makeSuccessful(args, result))
       await runLifeCycleHook(executeOptions?.postSuccess, result, args)
       await runLifeCycleHook(requestOptions?.postSuccess, result, args)
 
@@ -181,7 +181,7 @@ export function useRequest<
 
       await runLifeCycleHook(requestOptions?.preFailure, error, args)
       await runLifeCycleHook(executeOptions?.preFailure, error, args)
-      setState(makeFailed(args, error))
+      setState(States.makeFailed(args, error))
       await runLifeCycleHook(executeOptions?.postFailure, error, args)
       await runLifeCycleHook(requestOptions?.postFailure, error, args)
 
@@ -194,7 +194,7 @@ export function useRequest<
   }, [executeAsync])
 
   const reset = useCallback(() => {
-    setState(makePending())
+    setState(States.makePending())
   }, [setState])
 
   return {
@@ -220,7 +220,7 @@ export function useQuery<
 }
 
 /**
- * Query alias for {@link useRequest}.
+ * Command alias for {@link useRequest}.
  */
 export function useCommand<
   TCommand extends Command<TArgs, TResult>,
