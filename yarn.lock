@@ -1066,7 +1066,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@testing-library/dom@npm:9.3.4, @testing-library/dom@npm:^9.0.0":
+"@testing-library/dom@npm:9.3.4":
   version: 9.3.4
   resolution: "@testing-library/dom@npm:9.3.4"
   dependencies:
@@ -1082,17 +1082,37 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@testing-library/react@npm:14.2.1":
-  version: 14.2.1
-  resolution: "@testing-library/react@npm:14.2.1"
+"@testing-library/dom@npm:^10.0.0":
+  version: 10.1.0
+  resolution: "@testing-library/dom@npm:10.1.0"
+  dependencies:
+    "@babel/code-frame": ^7.10.4
+    "@babel/runtime": ^7.12.5
+    "@types/aria-query": ^5.0.1
+    aria-query: 5.3.0
+    chalk: ^4.1.0
+    dom-accessibility-api: ^0.5.9
+    lz-string: ^1.5.0
+    pretty-format: ^27.0.2
+  checksum: 275f53e57914e13361aa01a9fe155a3919ec911b61abddc44a7cd077e49d24672cdd43c76d840f7cdacea2f42c4aae92321066e6ddaff039f413745797d1b390
+  languageName: node
+  linkType: hard
+
+"@testing-library/react@npm:15.0.6":
+  version: 15.0.6
+  resolution: "@testing-library/react@npm:15.0.6"
   dependencies:
     "@babel/runtime": ^7.12.5
-    "@testing-library/dom": ^9.0.0
+    "@testing-library/dom": ^10.0.0
     "@types/react-dom": ^18.0.0
   peerDependencies:
+    "@types/react": ^18.0.0
     react: ^18.0.0
     react-dom: ^18.0.0
-  checksum: 7054ae69a0e06c0777da8105fa08fac7e8dac570476a065285d7b993947acda5c948598764a203ebaac759c161c562d6712f19f5bd08be3f09a07e23baee5426
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  checksum: bc9a839b352d748a0d5bcab81621e2e1d09ea58f245c4795cb8e69f97a4f71867a66115c9832f083b62abc357b510be396cd000eb751c85543b974e6a90caf7f
   languageName: node
   linkType: hard
 
@@ -1124,7 +1144,7 @@ __metadata:
   resolution: "@tommypersson/mediator-react@workspace:packages/mediator-react"
   dependencies:
     "@testing-library/dom": 9.3.4
-    "@testing-library/react": 14.2.1
+    "@testing-library/react": 15.0.6
     "@testing-library/user-event": 14.5.2
     "@tommypersson/mediator-core": "workspace:*"
     "@types/jest": 29.5.12
@@ -1517,6 +1537,15 @@ __metadata:
   dependencies:
     deep-equal: ^2.0.5
   checksum: 929ff95f02857b650fb4cbcd2f41072eee2f46159a6605ea03bf63aa572e35ffdff43d69e815ddc462e16e07de8faba3978afc2813650b4448ee18c9895d982b
+  languageName: node
+  linkType: hard
+
+"aria-query@npm:5.3.0":
+  version: 5.3.0
+  resolution: "aria-query@npm:5.3.0"
+  dependencies:
+    dequal: ^2.0.3
+  checksum: 305bd73c76756117b59aba121d08f413c7ff5e80fa1b98e217a3443fcddb9a232ee790e24e432b59ae7625aebcf4c47cb01c2cac872994f0b426f5bdfcd96ba9
   languageName: node
   linkType: hard
 
@@ -2187,7 +2216,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dequal@npm:2.0.3":
+"dequal@npm:2.0.3, dequal@npm:^2.0.3":
   version: 2.0.3
   resolution: "dequal@npm:2.0.3"
   checksum: 8679b850e1a3d0ebbc46ee780d5df7b478c23f335887464023a631d1b9af051ad4a6595a44220f9ff8ff95a8ddccf019b5ad778a976fd7bbf77383d36f412f90
